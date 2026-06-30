@@ -13,7 +13,7 @@ const DATA_DIR = path.join(__dirname, 'monitor-server', 'data');
 const RESULTS_FILE = path.join(DATA_DIR, 'results.json');
 const SHOT_WIDTH = 800;
 const SHOT_HEIGHT = 600;
-const CHANGE_THRESHOLD = 15; // 汉明距离阈值
+const CHANGE_THRESHOLD = 18; // 汉明距离阈值，与前端默认值一致
 
 const SITES = [
   { id: 'amazon',     name: 'Amazon',      url: 'https://www.amazon.com/' },
