@@ -1,0 +1,11 @@
+{
+  "name": "banner-monitor",
+  "version": "1.0.0",
+  "description": "跨境平台 Banner 后台监控 + 前端面板",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node check-once.js"
+  },
+  "dependencies": {}
+}

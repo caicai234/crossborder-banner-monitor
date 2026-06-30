@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境通 · 全球电商平台导航</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --grad: linear-gradient(135deg, #4f6ef7 0%, #7b5cff 50%, #b14ff7 100%);
+    --grad-soft: linear-gradient(135deg, #eef2ff 0%, #f3eeff 100%);
+    --ink: #1a1f36;
+    --muted: #6b7280;
+    --line: #eceef3;
+    --card: #ffffff;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f7f8fc;
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--line);
+  }
+  .hbar {
+    max-width: 1280px; margin: 0 auto;
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 20px; letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--grad);
+    display: grid; place-items: center;
+    color: #fff; font-size: 18px; font-weight: 800;
+    box-shadow: 0 6px 18px rgba(79,110,247,0.35);
+  }
+  .logo span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .search-wrap { flex: 1; max-width: 460px; position: relative; }
+  .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); width:18px; height:18px; }
+  #search {
+    width: 100%; padding: 11px 16px 11px 42px;
+    border: 1.5px solid var(--line); border-radius: 12px;
+    font-size: 14px; outline: none; background: #fff;
+    transition: border .2s, box-shadow .2s;
+  }
+  #search:focus { border-color: #7b5cff; box-shadow: 0 0 0 4px rgba(123,92,255,0.12); }
+  .count {
+    font-size: 13px; color: var(--muted); white-space: nowrap;
+  }
+  .count b { color: var(--ink); }
+
+  /* Hero */
+  .hero {
+    max-width: 1280px; margin: 0 auto;
+    padding: 52px 28px 28px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px;
+    line-height: 1.15; margin-bottom: 14px;
+  }
+  .hero h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 16px; color: var(--muted); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+  /* Region filter */
+  .filters {
+    max-width: 1280px; margin: 0 auto;
+    padding: 8px 28px 24px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center;
+    position: sticky; top: 65px; z-index: 90;
+    background: rgba(247,248,252,0.85);
+    backdrop-filter: blur(10px);
+    padding-top: 14px; padding-bottom: 14px;
+  }
+  .chip {
+    padding: 7px 16px; border-radius: 20px;
+    background: #fff; border: 1.5px solid var(--line);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    cursor: pointer; transition: all .2s; user-select: none;
+  }
+  .chip:hover { border-color: #b9c0f7; color: #4f6ef7; }
+  .chip.active { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(123,92,255,0.32); }
+
+  /* Sections */
+  main { max-width: 1280px; margin: 0 auto; padding: 0 28px 80px; }
+  .section { margin-bottom: 44px; }
+  .section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px; padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--line);
+  }
+  .region-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 4px 10px; border-radius: 6px;
+    background: var(--grad-soft); color: #4f6ef7;
+    text-transform: uppercase;
+  }
+  .section-head h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+  .section-head .qty { font-size: 13px; color: var(--muted); margin-left: auto; }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform .22s cubic-bezier(.2,.7,.3,1), box-shadow .22s, border-color .22s;
+    text-decoration: none; color: inherit; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0;
+    background: var(--grad); opacity: 0; transition: opacity .22s;
+    z-index: 0;
+  }
+  .card > * { position: relative; z-index: 1; }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(79,110,247,0.16);
+    border-color: transparent;
+  }
+  .card-top { display: flex; align-items: center; gap: 12px; }
+  .ic {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 18px;
+    flex-shrink: 0; letter-spacing: -0.5px;
+  }
+  .card-top h3 { font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .card-top .loc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; flex: 1; }
+  .vpn-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 700; color: #ef4444;
+    background: #fef2f2; padding: 2px 7px; border-radius: 6px;
+    margin-top: 2px; letter-spacing: 0;
+  }
+  .vpn-badge svg { width: 12px; height: 12px; }
+  .go {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 700; color: #4f6ef7;
+    margin-top: 2px;
+  }
+  .go svg { width: 13px; height: 13px; transition: transform .2s; }
+  .card:hover .go svg { transform: translateX(3px); }
+  .proxy-btn-card {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: #7b5cff;
+    background: #f3eeff; padding: 5px 10px; border-radius: 8px;
+    margin-top: 2px; cursor: pointer; transition: all .2s;
+    text-decoration: none; border: none;
+  }
+  .proxy-btn-card:hover { background: #7b5cff; color: #fff; box-shadow: 0 3px 8px rgba(123,92,255,.25); }
+  .proxy-btn-card svg { width: 12px; height: 12px; }
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+  /* Favorite button */
+  .fav-btn {
+    position: absolute; top: 12px; right: 12px; z-index: 5;
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    background: rgba(255,255,255,.7); cursor: pointer;
+    display: grid; place-items: center; transition: all .2s;
+    backdrop-filter: blur(6px);
+  }
+  .fav-btn svg { width: 16px; height: 16px; transition: all .2s; }
+  .fav-btn:hover { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .fav-btn.active svg { fill: #ef4444; stroke: #ef4444; filter: drop-shadow(0 1px 3px rgba(239,68,68,.4)); }
+  .fav-btn.active { background: #fef2f2; }
+
+  /* Fav filter chip */
+  .chip-fav {
+    background: #fef2f2 !important; border-color: #fecaca !important; color: #ef4444 !important;
+  }
+  .chip-fav.active { background: linear-gradient(135deg,#ef4444,#dc2626) !important; color: #fff !important; border-color: transparent !important; }
+
+  /* Fav count badge */
+  .fav-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700; color: #ef4444;
+    padding: 6px 12px; border-radius: 10px;
+    background: #fef2f2; cursor: pointer; transition: all .2s;
+    border: 1.5px solid #fecaca; white-space: nowrap;
+  }
+  .fav-badge:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+  .fav-badge svg { width: 15px; height: 15px; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+  .empty b { color: var(--ink); }
+
+  /* Footer */
+  footer {
+    text-align: center; padding: 40px 20px;
+    color: var(--muted); font-size: 13px;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: #4f6ef7; text-decoration: none; font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .hero h1 { font-size: 30px; }
+    .hbar { padding: 12px 18px; gap: 12px; }
+    .count { display: none; }
+    .filters { padding: 12px 16px; top: 61px; }
+    main { padding: 0 16px 60px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
+    .card { padding: 14px; }
+    .ic { width: 38px; height: 38px; font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div class="logo">
+      <div class="logo-mark">跨</div>
+      <span>跨境通</span>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="搜索平台名称，如 Amazon、Shein、Shopee…" autocomplete="off">
+    </div>
+    <div class="count">共 <b id="total">0</b> 个平台</div>
+    <div class="fav-badge" id="favBadge" onclick="toggleFavFilter()" title="查看我的收藏">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span id="favCount">0</span>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>全球跨境平台<em>一键直达</em></h1>
+  <p>聚合北美、欧洲、东南亚、日韩、拉美、中东、非洲、俄罗斯、印度及中国出海等全球主流电商平台买家端，选品调研、竞品监控、市场洞察从此不再东翻西找。<br><span style="color:#ef4444;font-weight:600">标注「需VPN」的平台需通过VPN/代理访问买家端。</span></p>
+</div>
+
+<div class="filters" id="filters"></div>
+<main id="main"></main>
+
+<footer>
+  数据收集于各平台公开买家端，访问时请遵守当地法律法规 · <a href="banner-monitor.html">Banner监控</a> · <a href="activity-hub.html">活动玩法库</a> · <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">回到顶部 ↑</a>
+</footer>
+
+<script>
+const DATA = [
+  // ===== 北美 =====
+  { region:"北美", name:"Amazon", loc:"amazon.com", url:"https://www.amazon.com", color:"#FF9900", desc:"全球最大综合电商，覆盖全品类，Prime会员体系成熟。" },
+  { region:"北美", name:"eBay", loc:"ebay.com", url:"https://www.ebay.com", color:"#E53238", desc:"老牌拍卖+一口价平台，二手、汽配、收藏品强势。" },
+  { region:"北美", name:"Walmart", loc:"walmart.com", url:"https://www.walmart.com", color:"#0071CE", desc:"美国最大零售商线上平台，第三方卖家快速扩张。" },
+  { region:"北美", name:"Etsy", loc:"etsy.com", url:"https://www.etsy.com", color:"#F1641E", desc:"手作、创意、个性化商品垂直社区，买家高黏性。" },
+  { region:"北美", name:"Target", loc:"target.com", url:"https://www.target.com", color:"#CC0000", desc:"美国第二大折扣零售商，家居日用为主。" },
+  { region:"北美", name:"Wayfair", loc:"wayfair.com", url:"https://www.wayfair.com", color:"#7B189F", desc:"家居家具垂直平台，北美欧洲双线运营。" },
+  { region:"北美", name:"Best Buy", loc:"bestbuy.com", url:"https://www.bestbuy.com", color:"#0046BE", desc:"消费电子、家电专业零售平台。" },
+  { region:"北美", name:"Costco", loc:"costco.com", url:"https://www.costco.com", color:"#D31E2A", desc:"会员制仓储电商，高品质大件、食品为主。" },
+  { region:"北美", name:"Home Depot", loc:"homedepot.com", url:"https://www.homedepot.com", color:"#F96302", vpn:true, desc:"家居建材、园艺工具垂直巨头。⚠ 需VPN访问。" },
+  { region:"北美", name:"Newegg", loc:"newegg.com", url:"https://www.newegg.com", color:"#F26822", desc:"IT数码、DIY硬件垂直电商，北美装机客首选。" },
+
+  // ===== 欧洲 =====
+  { region:"欧洲", name:"Amazon UK", loc:"amazon.co.uk", url:"https://www.amazon.co.uk", color:"#FF9900", desc:"亚马逊英国站，英伦市场主入口。" },
+  { region:"欧洲", name:"Amazon DE", loc:"amazon.de", url:"https://www.amazon.de", color:"#FF9900", desc:"亚马逊德国站，欧洲最大单一市场。" },
+  { region:"欧洲", name:"Amazon FR", loc:"amazon.fr", url:"https://www.amazon.fr", color:"#FF9900", desc:"亚马逊法国站，时尚美妆消费力强。" },
+  { region:"欧洲", name:"Amazon IT", loc:"amazon.it", url:"https://www.amazon.it", color:"#FF9900", desc:"亚马逊意大利站，南欧门户。" },
+  { region:"欧洲", name:"Amazon ES", loc:"amazon.es", url:"https://www.amazon.es", color:"#FF9900", desc:"亚马逊西班牙站，伊比利亚市场。" },
+  { region:"欧洲", name:"eBay UK", loc:"ebay.co.uk", url:"https://www.ebay.co.uk", color:"#E53238", desc:"eBay英国站，二手与汽配活跃。" },
+  { region:"欧洲", name:"eBay DE", loc:"ebay.de", url:"https://www.ebay.de", color:"#E53238", desc:"eBay德国站，工业品与收藏品强势。" },
+  { region:"欧洲", name:"Allegro", loc:"allegro.pl", url:"https://www.allegro.pl", color:"#FF5A00", desc:"波兰最大综合电商，中东欧龙头。" },
+  { region:"欧洲", name:"Cdiscount", loc:"cdiscount.com", url:"https://www.cdiscount.com", color:"#005DA8", desc:"法国本土第二大平台，全品类。" },
+  { region:"欧洲", name:"Otto", loc:"otto.de", url:"https://www.otto.de", color:"#E50019", desc:"德国老牌零售电商，家居服饰为主。" },
+  { region:"欧洲", name:"bol.com", loc:"bol.com", url:"https://www.bol.com", color:"#0066CC", desc:"荷兰比利时最大平台，比荷卢核心。" },
+  { region:"欧洲", name:"Zalando", loc:"zalando.com", url:"https://www.zalando.com", color:"#FF6900", desc:"欧洲最大时尚鞋履垂直电商。" },
+  { region:"欧洲", name:"Rakuten France", loc:"fr.shopping.rakuten.com", url:"https://fr.shopping.rakuten.com", color:"#BF0000", desc:"乐天法国站，原Priceminister。" },
+  { region:"欧洲", name:"ManoMano", loc:"manomano.fr", url:"https://www.manomano.fr", color:"#00C2A8", desc:"欧洲DIY园艺家居垂直平台。" },
+
+  // ===== 东南亚 =====
+  { region:"东南亚", name:"Shopee", loc:"shopee.com", url:"https://shopee.com", color:"#EE4D2D", desc:"Sea旗下，东南亚印尼双龙头，移动优先。" },
+  { region:"东南亚", name:"Lazada", loc:"lazada.com", url:"https://www.lazada.com", color:"#0F156D", desc:"阿里旗下，东南亚六国运营。" },
+  { region:"东南亚", name:"Tokopedia", loc:"tokopedia.com", url:"https://www.tokopedia.com", color:"#42B549", desc:"印尼本土最大C2C平台。" },
+  { region:"东南亚", name:"TikTok Shop", loc:"shop.tiktok.com", url:"https://shop.tiktok.com", color:"#000000", desc:"内容电商新势力，直播带货爆发增长。" },
+  { region:"东南亚", name:"Bukalapak", loc:"bukalapak.com", url:"https://www.bukalapak.com", color:"#E31F4B", desc:"印尼综合电商，覆盖线下小店。" },
+  { region:"东南亚", name:"Tiki", loc:"tiki.vn", url:"https://tiki.vn", color:"#1A9CB7", desc:"越南本土平台，图书数码起家。" },
+  { region:"东南亚", name:"Blibli", loc:"blibli.com", url:"https://www.blibli.com", color:"#0095DA", desc:"印尼金鹰集团旗下综合电商。" },
+  { region:"东南亚", name:"Qoo10 SG", loc:"qoo10.sg", url:"https://www.qoo10.sg", color:"#E1251B", desc:"新加坡泛亚跨境平台。" },
+
+  // ===== 日韩 =====
+  { region:"日韩", name:"Rakuten", loc:"rakuten.co.jp", url:"https://www.rakuten.co.jp", color:"#BF0000", desc:"日本最大综合电商生态，乐天市场。" },
+  { region:"日韩", name:"Yahoo! Japan Shopping", loc:"shopping.yahoo.co.jp", url:"https://shopping.yahoo.co.jp", color:"#FF0033", desc:"雅虎日本购物，日本流量前列。" },
+  { region:"日韩", name:"Amazon JP", loc:"amazon.co.jp", url:"https://www.amazon.co.jp", color:"#FF9900", desc:"亚马逊日本站，日本电商前三。" },
+  { region:"日韩", name:"Mercari", loc:"mercari.com", url:"https://www.mercari.com", color:"#FF5A1F", desc:"日本最大C2C二手交易平台。" },
+  { region:"日韩", name:"Coupang", loc:"coupang.com", url:"https://www.coupang.com", color:"#F8323E", desc:"韩国第一电商，Rocket Delivery极速达。" },
+  { region:"日韩", name:"Gmarket", loc:"gmarket.co.kr", url:"https://global.gmarket.co.kr", color:"#06B945", desc:"韩国老牌综合电商，国际站开放。" },
+  { region:"日韩", name:"11STREET", loc:"11st.co.kr", url:"https://global.11st.co.kr", color:"#1A1A1A", desc:"韩国SK旗下综合电商，11街。" },
+  { region:"日韩", name:"SSG", loc:"ssg.com", url:"https://www.ssg.com", color:"#C00000", desc:"新世界百货旗下，韩国高端零售。" },
+  { region:"日韩", name:"Lotte ON", loc:"lotteon.com", url:"https://www.lotteon.com", color:"#EF0017", desc:"乐天集团综合电商，韩国前列。" },
+
+  // ===== 印度 =====
+  { region:"印度", name:"Amazon IN", loc:"amazon.in", url:"https://www.amazon.in", color:"#FF9900", desc:"亚马逊印度站，与Flipkart双雄并立。" },
+  { region:"印度", name:"Flipkart", loc:"flipkart.com", url:"https://www.flipkart.com", color:"#2874F0", desc:"印度本土最大电商，沃尔玛控股。" },
+  { region:"印度", name:"Myntra", loc:"myntra.com", url:"https://www.myntra.com", color:"#FF3E6C", desc:"Flipkart旗下时尚垂直平台。" },
+  { region:"印度", name:"Snapdeal", loc:"snapdeal.com", url:"https://www.snapdeal.com", color:"#E40046", desc:"印度本土综合电商，性价比定位。" },
+  { region:"印度", name:"Meesho", loc:"meesho.com", url:"https://www.meesho.com", color:"#F43397", desc:"印度社交电商代表，下沉市场强势。" },
+  { region:"印度", name:"JioMart", loc:"jiomart.com", url:"https://www.jiomart.com", color:"#0F3D9E", desc:"信实集团旗下，杂货日用品起家。" },
+
+  // ===== 拉美 =====
+  { region:"拉美", name:"Mercado Libre", loc:"mercadolibre.com", url:"https://www.mercadolibre.com", color:"#FFE600", dark:true, desc:"拉美最大电商，覆盖18国，巴西墨西哥为核心。" },
+  { region:"拉美", name:"Amazon BR", loc:"amazon.com.br", url:"https://www.amazon.com.br", color:"#FF9900", desc:"亚马逊巴西站，拉美增长引擎。" },
+  { region:"拉美", name:"Amazon MX", loc:"amazon.com.mx", url:"https://www.amazon.com.mx", color:"#FF9900", desc:"亚马逊墨西哥站，北美延展。" },
+  { region:"拉美", name:"Americanas", loc:"americanas.com", url:"https://www.americanas.com", color:"#E60012", desc:"巴西老牌零售电商，全品类。" },
+  { region:"拉美", name:"Magazine Luiza", loc:"magazineluiza.com.br", url:"https://www.magazineluiza.com.br", color:"#0086FF", desc:"巴西本土科技零售巨头，Magalu。" },
+  { region:"拉美", name:"Falabella", loc:"falabella.com", url:"https://www.falabella.com", color:"#A8CF45", desc:"智利零售集团，覆盖南美西岸。" },
+  { region:"拉美", name:"Linio", loc:"linio.com", url:"https://www.linio.com", color:"#FF5A00", desc:"拉美跨境平台，多国运营。" },
+  { region:"拉美", name:"Casas Bahia", loc:"casasbahia.com", url:"https://www.casasbahia.com", color:"#0033A0", desc:"巴西家电家具零售龙头。" },
+
+  // ===== 中东 =====
+  { region:"中东", name:"Noon", loc:"noon.com", url:"https://www.noon.com", color:"#FEEE00", dark:true, desc:"中东本土电商，沙特阿联酋核心。" },
+  { region:"中东", name:"Amazon AE", loc:"amazon.ae", url:"https://www.amazon.ae", color:"#FF9900", desc:"亚马逊阿联酋站，原Souq。" },
+  { region:"中东", name:"Amazon SA", loc:"amazon.sa", url:"https://www.amazon.sa", color:"#FF9900", desc:"亚马逊沙特站，中东第二大市场。" },
+  { region:"中东", name:"Namshi", loc:"namshi.com", url:"https://www.namshi.com", color:"#000000", desc:"中东时尚垂直电商，Noon旗下。" },
+  { region:"中东", name:"Salla", loc:"salla.sa", url:"https://salla.sa", color:"#BAF3E6", dark:true, desc:"沙特本土SaaS电商，独立站生态。" },
+  { region:"中东", name:"Jumbo", loc:"jumbo.ae", url:"https://www.jumbo.ae", color:"#E2231A", desc:"阿联酋消费电子零售商。" },
+
+  // ===== 非洲 =====
+  { region:"非洲", name:"Jumia", loc:"jumia.com", url:"https://www.jumia.com", color:"#F68B1E", desc:"非洲最大电商，覆盖尼日利亚埃及等十余国。" },
+  { region:"非洲", name:"Kilimall", loc:"kilimall.com", url:"https://www.kilimall.com", color:"#E60012", desc:"中国出海非洲平台，东非起步。" },
+  { region:"非洲", name:"Takealot", loc:"takealot.com", url:"https://www.takealot.com", color:"#00A0E0", desc:"南非最大综合电商。" },
+  { region:"非洲", name:"Konga", loc:"konga.com", url:"https://www.konga.com", color:"#ED1C24", desc:"尼日利亚本土电商，与Jumia竞争。" },
+  { region:"非洲", name:"Jiji", loc:"jiji.ng", url:"https://jiji.ng", color:"#00C853", desc:"非洲分类信息+C2C交易平台。" },
+
+  // ===== 俄罗斯/独联体 =====
+  { region:"俄罗斯", name:"Ozon", loc:"ozon.ru", url:"https://www.ozon.ru", color:"#005BFF", desc:"俄罗斯第二大电商，全品类高速增长。" },
+  { region:"俄罗斯", name:"Wildberries", loc:"wildberries.ru", url:"https://www.wildberries.ru", color:"#CB11AB", desc:"俄罗斯最大电商，服饰起家覆盖独联体。" },
+  { region:"俄罗斯", name:"Yandex Market", loc:"market.yandex.ru", url:"https://market.yandex.ru", color:"#FFCC00", dark:true, desc:"Yandex旗下电商，比价+商城。" },
+  { region:"俄罗斯", name:"Joom", loc:"joom.com", url:"https://www.joom.com", color:"#7C4DFF", desc:"俄罗斯孵化跨境移动电商，欧洲俄罗斯用户。" },
+  { region:"俄罗斯", name:"Megamarket", loc:"megamarket.ru", url:"https://megamarket.ru", color:"#FF6900", desc:"原Beru，俄罗斯储蓄银行旗下。" },
+
+  // ===== 中国出海 =====
+  { region:"中国出海", name:"AliExpress", loc:"aliexpress.com", url:"https://www.aliexpress.com", color:"#E62E04", desc:"速卖通，阿里出海旗舰，覆盖全球200+国家。" },
+  { region:"中国出海", name:"Shein", loc:"us.shein.com", url:"https://us.shein.com", color:"#000000", vpn:true, desc:"希音，快时尚出海标杆，欧美Z世代首选。⚠ 需VPN访问US站。" },
+  { region:"中国出海", name:"Temu", loc:"temu.com", url:"https://www.temu.com", color:"#FB7701", vpn:true, desc:"拼多多出海，极致性价比，全球爆发增长。⚠ 需VPN访问买家端。" },
+  { region:"中国出海", name:"TikTok Shop", loc:"shop.tiktok.com", url:"https://shop.tiktok.com", color:"#000000", vpn:true, desc:"字节跳动内容电商，全球多国落地。⚠ 需VPN访问。" },
+  { region:"中国出海", name:"Wish", loc:"wish.com", url:"https://www.wish.com", color:"#4BC2F6", desc:"移动端低价跨境，北美欧洲为主。" },
+  { region:"中国出海", name:"LightInTheBox", loc:"lightinthebox.com", url:"https://www.lightinthebox.com", color:"#FF6600", desc:"兰亭集势，婚纱服饰跨境电商。" },
+  { region:"中国出海", name:"DHgate", loc:"dhgate.com", url:"https://www.dhgate.com", color:"#FF6600", desc:"敦煌网，B2B跨境批发老牌平台。" },
+  { region:"中国出海", name:"Banggood", loc:"banggood.com", url:"https://www.banggood.com", color:"#FF7E00", desc:"棒谷，3C数码玩具跨境B2C。" },
+  { region:"中国出海", name:"Gearbest", loc:"gearbest.com", url:"https://www.gearbest.com", color:"#FF6E00", desc:"环球易购旗下，3C小家电跨境。" },
+  { region:"中国出海", name:"Cupshe", loc:"cupshe.com", url:"https://www.cupshe.com", color:"#1B1B3A", desc:"泳装出海品牌独立站，北美强势。" },
+  { region:"中国出海", name:"Cider", loc:"shopcider.com", url:"https://www.shopcider.com", color:"#FF4D4D", desc:"快时尚出海新锐，Z世代社交驱动。" },
+  { region:"中国出海", name:"PatPat", loc:"patpat.com", url:"https://www.patpat.com", color:"#FF7DB5", desc:"童装母婴出海品牌。" }
+];
+
+const REGIONS = ["全部", "⭐ 收藏", "北美", "欧洲", "东南亚", "日韩", "印度", "拉美", "中东", "非洲", "俄罗斯", "中国出海"];
+let activeRegion = "全部";
+let keyword = "";
+
+const main = document.getElementById("main");
+const filters = document.getElementById("filters");
+const totalEl = document.getElementById("total");
+const searchEl = document.getElementById("search");
+
+// Favorites
+function getFavs() { try { return JSON.parse(localStorage.getItem('crossborder_favs') || '[]'); } catch(e) { return []; } }
+function setFavs(arr) { localStorage.setItem('crossborder_favs', JSON.stringify(arr)); updateFavUI(); }
+function isFav(url) { return getFavs().includes(url); }
+function addFav(url) { if (!isFav(url)) { setFavs([...getFavs(), url]); } }
+function removeFav(url) { setFavs(getFavs().filter(u => u !== url)); }
+function toggleFav(url) { if (isFav(url)) removeFav(url); else addFav(url); render(); }
+function updateFavUI() {
+  const n = getFavs().length;
+  document.getElementById('favCount').textContent = n;
+}
+function toggleFavFilter() {
+  if (activeRegion !== "⭐ 收藏") {
+    activeRegion = "⭐ 收藏";
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.chip').forEach(x => { if(x.textContent.includes("收藏")) x.classList.add('active'); });
+  } else {
+    activeRegion = "全部";
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.chip').forEach(x => { if(x.textContent === "全部") x.classList.add('active'); });
+  }
+  render();
+}
+updateFavUI();
+
+// Render filters
+REGIONS.forEach((r, i) => {
+  const c = document.createElement("div");
+  const isFavChip = r.includes("收藏");
+  c.className = "chip" + (i === 0 ? " active" : "") + (isFavChip ? " chip-fav" : "");
+  c.textContent = r;
+  c.onclick = () => {
+    document.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+    c.classList.add("active");
+    activeRegion = r;
+    render();
+  };
+  filters.appendChild(c);
+});
+
+function initials(name) {
+  // 取主要首字母/前两字符
+  const cleaned = name.replace(/[^A-Za-z0-9\u4e00-\u9fa5]/g, " ").trim();
+  const parts = cleaned.split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
+function render() {
+  const kw = keyword.trim().toLowerCase();
+  const favUrls = getFavs();
+  const filtered = DATA.filter(p => {
+    const regionOk = activeRegion === "全部" || (activeRegion === "⭐ 收藏" ? favUrls.includes(p.url) : p.region === activeRegion);
+    const kwOk = !kw || p.name.toLowerCase().includes(kw) || p.loc.toLowerCase().includes(kw) || p.region.toLowerCase().includes(kw) || p.desc.toLowerCase().includes(kw);
+    return regionOk && kwOk;
+  });
+  totalEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    if (activeRegion === "⭐ 收藏") {
+      main.innerHTML = `<div class="empty">还没有收藏任何平台。<br>点击卡片右上角的 ❤ 添加收藏！</div>`;
+    } else {
+      main.innerHTML = `<div class="empty">没有找到匹配的平台，试试别的关键词？<br>当前共 <b>${DATA.length}</b> 个平台可访问。</div>`;
+    }
+    return;
+  }
+
+  // 按区域分组
+  const groups = {};
+  filtered.forEach(p => { (groups[p.region] = groups[p.region] || []).push(p); });
+  const order = REGIONS.filter(r => r !== "全部");
+  order.sort((a,b) => {
+    // 让活跃区域排前面
+    if (a === activeRegion) return -1;
+    if (b === activeRegion) return 1;
+    return 0;
+  });
+
+  let html = "";
+  order.forEach(region => {
+    if (!groups[region]) return;
+    const list = groups[region];
+    html += `<div class="section"><div class="section-head">
+      <span class="region-tag">${region}</span>
+      <h2>${region}平台</h2>
+      <span class="qty">${list.length} 个</span>
+    </div><div class="grid">`;
+    list.forEach(p => {
+      const txtColor = p.dark ? "#1a1f36" : "#fff";
+      const vpnBadge = p.vpn ? `<span class="vpn-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>需VPN</span>` : '';
+      const proxyBtn = p.vpn ? `<a class="proxy-btn-card" href="proxy.html?url=${encodeURIComponent(p.url)}&name=${encodeURIComponent(p.name)}" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>云端浏览</a>` : '';
+      const directBtn = `<span class="go">访问买家端 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+      const actions = p.vpn ? `<div class="card-actions">${directBtn}${proxyBtn}</div>` : directBtn;
+      const favd = isFav(p.url);
+      html += `<a class="card" href="${p.url}" target="_blank" rel="noopener noreferrer">
+        <button class="fav-btn${favd ? ' active' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.url}')" title="${favd ? '取消收藏' : '添加收藏'}">
+          <svg viewBox="0 0 24 24" fill="${favd ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="card-top">
+          <div class="ic" style="background:${p.color};color:${txtColor}">${initials(p.name)}</div>
+          <div>
+            <h3>${p.name}</h3>
+            <div class="loc">${p.loc} ${vpnBadge}</div>
+          </div>
+        </div>
+        <div class="desc">${p.desc}</div>
+        ${actions}
+      </a>`;
+    });
+    html += `</div></div>`;
+  });
+  main.innerHTML = html;
+}
+
+searchEl.addEventListener("input", e => { keyword = e.target.value; render(); });
+render();
+</script>
+</body>
+</html>

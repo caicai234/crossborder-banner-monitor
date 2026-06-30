@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境平台 Banner 监控系统</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    background:#0a0e1a;color:#e2e8f0;min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* Hero */
+  .hero{
+    background:linear-gradient(135deg,#0d1525 0%,#131b35 40%,#1a1340 100%);
+    border-bottom:1px solid #1e2a4a;padding:28px 32px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  }
+  .hero-left h1{
+    font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .hero-left p{font-size:13px;color:#64748b;margin-top:4px}
+  .hero-right{display:flex;align-items:center;gap:14px}
+  .live-dot{
+    display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+    padding:7px 16px;border-radius:20px;transition:.3s;cursor:pointer;
+  }
+  .live-dot.running{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+  .live-dot.running .dot{background:#22c55e;box-shadow:0 0 8px #22c55e}
+  .live-dot.stopped{background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+  .live-dot.stopped .dot{background:#64748b}
+  .dot{width:8px;height:8px;border-radius:50%;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .countdown{font-size:12px;color:#64748b;font-variant-numeric:tabular-nums}
+
+  /* Controls */
+  .controls{
+    display:flex;align-items:center;gap:12px;padding:14px 32px;flex-wrap:wrap;
+    background:#0d1322;border-bottom:1px solid #1a2338;
+  }
+  .btn{
+    padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+    border:none;transition:.2s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn-primary{background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,110,247,.4)}
+  .btn-ghost{background:rgba(255,255,255,.06);color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+  .btn-ghost:hover{background:rgba(255,255,255,.12);color:#e2e8f0}
+  .btn-danger{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+  .btn-danger:hover{background:rgba(239,68,68,.25)}
+  .select-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b}
+  select{
+    background:#141b2e;color:#e2e8f0;border:1px solid #1e2a4a;border-radius:8px;
+    padding:6px 12px;font-size:13px;cursor:pointer;outline:none;
+  }
+  select:hover{border-color:#4f6ef7}
+  .spacer{flex:1}
+  .stats{display:flex;gap:18px;font-size:12px}
+  .stat{display:flex;align-items:center;gap:5px;color:#64748b}
+  .stat b{color:#e2e8f0;font-size:14px;font-weight:700}
+  .stat .changed{color:#f87171}
+  .stat .ok{color:#4ade80}
+
+  /* Grid */
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:18px;padding:22px 32px;
+  }
+  .card{
+    background:#111827;border:1px solid #1a2338;border-radius:16px;overflow:hidden;
+    transition:.3s;position:relative;
+  }
+  .card:hover{border-color:#2a3a5a;transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+  .card.changed{border-color:rgba(239,68,68,.5);animation:flashRed 1s ease-in-out 3}
+  .card.checking{border-color:rgba(79,110,247,.4)}
+  .card.error{border-color:rgba(239,68,68,.3);opacity:.7}
+  @keyframes flashRed{
+    0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}
+    50%{box-shadow:0 0 24px rgba(239,68,68,.4)}
+  }
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px 10px;
+  }
+  .card-head-left{display:flex;align-items:center;gap:10px}
+  .site-icon{
+    width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;flex-shrink:0;
+  }
+  .site-name{font-size:14px;font-weight:700;color:#e2e8f0}
+  .site-url{font-size:11px;color:#4a5568;margin-top:1px}
+  .status-badge{
+    font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .status-badge.normal{background:rgba(34,197,94,.12);color:#4ade80}
+  .status-badge.changed{background:rgba(239,68,68,.15);color:#f87171}
+  .status-badge.checking{background:rgba(79,110,247,.15);color:#60a5fa}
+  .status-badge.error{background:rgba(239,68,68,.1);color:#ef4444}
+  .status-badge.baseline{background:rgba(100,116,139,.15);color:#94a3b8}
+  .status-badge .sd{width:6px;height:6px;border-radius:50%}
+  .status-badge.normal .sd{background:#22c55e}
+  .status-badge.changed .sd{background:#ef4444;animation:pulse 1s infinite}
+  .status-badge.checking .sd{background:#3b82f6;animation:pulse 1s infinite}
+  .status-badge.error .sd{background:#ef4444}
+  .status-badge.baseline .sd{background:#64748b}
+
+  .shot-wrap{
+    position:relative;margin:0 16px;border-radius:12px;overflow:hidden;
+    background:#0a0e1a;aspect-ratio:4/3;
+  }
+  .shot-wrap img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .shot-wrap .placeholder{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    color:#374151;font-size:13px;flex-direction:column;gap:8px;
+  }
+  .shot-wrap .loading-overlay{
+    position:absolute;inset:0;background:rgba(10,14,26,.7);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .spinner{
+    width:32px;height:32px;border:3px solid rgba(79,110,247,.2);
+    border-top-color:#4f6ef7;border-radius:50%;animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .shot-wrap .changed-tag{
+    position:absolute;top:8px;right:8px;background:rgba(239,68,68,.9);
+    color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;
+  }
+
+  .card-foot{
+    padding:10px 16px 14px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .foot-info{font-size:11px;color:#4a5568;line-height:1.5}
+  .foot-info b{color:#94a3b8;font-weight:600}
+  .foot-actions{display:flex;gap:6px}
+  .foot-btn{
+    font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;
+    border:1px solid #1e2a4a;background:rgba(255,255,255,.04);color:#94a3b8;
+    transition:.2s;text-decoration:none;
+  }
+  .foot-btn:hover{background:rgba(79,110,247,.15);color:#60a5fa;border-color:#4f6ef7}
+  .foot-btn.compare:hover{background:rgba(239,68,68,.15);color:#f87171;border-color:#ef4444}
+
+  /* History */
+  .history-section{padding:8px 32px 40px}
+  .history-title{
+    font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  }
+  .history-title .count{
+    font-size:12px;font-weight:600;background:rgba(79,110,247,.2);color:#60a5fa;
+    padding:2px 10px;border-radius:10px;
+  }
+  .history-list{display:flex;flex-direction:column;gap:10px}
+  .history-item{
+    display:flex;align-items:center;gap:14px;padding:12px 18px;
+    background:#0f1623;border:1px solid #1a2338;border-radius:12px;
+    transition:.2s;cursor:pointer;
+  }
+  .history-item:hover{border-color:#2a3a5a;background:#131b2e}
+  .hi-time{font-size:12px;color:#64748b;font-variant-numeric:tabular-nums;min-width:120px}
+  .hi-site{
+    font-size:13px;font-weight:600;padding:3px 12px;border-radius:8px;
+    background:rgba(255,255,255,.06);min-width:100px;text-align:center;
+  }
+  .hi-desc{font-size:12px;color:#94a3b8;flex:1}
+  .hi-desc b{color:#f87171}
+  .hi-arrow{color:#4a5568;font-size:14px}
+  .empty-history{text-align:center;padding:30px;color:#374151;font-size:13px}
+
+  /* Toast */
+  .toast-container{
+    position:fixed;top:20px;right:20px;z-index:9999;
+    display:flex;flex-direction:column;gap:10px;max-width:380px;
+  }
+  .toast{
+    background:#111827;border:1px solid #1e2a4a;border-radius:12px;padding:14px 18px;
+    display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);
+    animation:slideIn .3s ease-out;
+  }
+  .toast.alert{border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,#1a1018,#111827)}
+  .toast.info{border-color:rgba(79,110,247,.3)}
+  .toast.success{border-color:rgba(34,197,94,.3)}
+  @keyframes slideIn{from{transform:translateX(420px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .toast.removing{animation:slideOut .3s ease-in forwards}
+  @keyframes slideOut{to{transform:translateX(420px);opacity:0}}
+  .toast-icon{font-size:20px;flex-shrink:0;line-height:1}
+  .toast-body{flex:1}
+  .toast-title{font-size:13px;font-weight:700;margin-bottom:2px}
+  .toast-msg{font-size:12px;color:#94a3b8;line-height:1.4}
+  .toast-close{font-size:16px;color:#4a5568;cursor:pointer;flex-shrink:0;line-height:1;padding:0 0 0 8px}
+  .toast-close:hover{color:#94a3b8}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+    z-index:8000;display:none;align-items:center;justify-content:center;padding:30px;
+  }
+  .modal-overlay.show{display:flex;animation:fadeIn .2s}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:#0f1623;border:1px solid #1e2a4a;border-radius:18px;
+    max-width:1100px;width:100%;max-height:90vh;overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 24px;border-bottom:1px solid #1a2338;
+  }
+  .modal-head h3{font-size:16px;font-weight:700}
+  .modal-close{
+    width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.06);cursor:pointer;font-size:18px;color:#94a3b8;transition:.2s;
+  }
+  .modal-close:hover{background:rgba(239,68,68,.2);color:#f87171}
+  .modal-body{padding:24px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .compare-col h4{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .compare-col .tag-old{color:#94a3b8;font-size:11px;background:rgba(100,116,139,.15);padding:2px 8px;border-radius:6px}
+  .compare-col .tag-new{color:#f87171;font-size:11px;background:rgba(239,68,68,.15);padding:2px 8px;border-radius:6px}
+  .compare-img{
+    width:100%;border-radius:12px;border:1px solid #1a2338;background:#0a0e1a;
+    aspect-ratio:4/3;object-fit:cover;object-position:top;
+  }
+  .compare-info{text-align:center;font-size:12px;color:#64748b;margin-top:8px}
+  .compare-info b{color:#f87171}
+
+  /* Responsive */
+  @media(max-width:768px){
+    .hero{padding:18px}
+    .controls{padding:12px 18px}
+    .grid{padding:14px;grid-template-columns:1fr}
+    .history-section{padding:8px 18px 30px}
+    .modal-body{grid-template-columns:1fr}
+    .stats{flex-wrap:wrap;gap:10px}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-left">
+    <h1>📡 跨境平台 Banner 监控系统</h1>
+    <p>实时监控 Amazon / Shein / Home Depot / Temu / AliExpress / Wayfair / Lowe's 首页 Banner 变化</p>
+  </div>
+  <div class="hero-right">
+    <div class="live-dot stopped" id="liveDot" onclick="toggleMonitor()">
+      <span class="dot"></span>
+      <span id="liveText">监控未启动</span>
+    </div>
+    <div class="countdown" id="countdown"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" id="startBtn" onclick="toggleMonitor()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    启动监控
+  </button>
+  <button class="btn btn-ghost" onclick="checkAll(true)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    立即检测
+  </button>
+  <button class="btn btn-danger" onclick="clearAllChanges()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    清除变化标记
+  </button>
+  <div class="select-wrap">
+    检测间隔
+    <select id="intervalSelect" onchange="changeInterval()">
+      <option value="60">1 小时</option>
+      <option value="360">6 小时</option>
+      <option value="720">12 小时</option>
+      <option value="1440" selected>1 天</option>
+      <option value="2880">2 天</option>
+      <option value="10080">7 天</option>
+    </select>
+  </div>
+  <div class="select-wrap">
+    灵敏度
+    <select id="thresholdSelect" onchange="changeThreshold()">
+      <option value="10">高</option>
+      <option value="18" selected>中</option>
+      <option value="30">低</option>
+    </select>
+  </div>
+  <div class="spacer"></div>
+  <div class="stats">
+    <div class="stat">监控 <b id="statTotal">8</b></div>
+    <div class="stat">正常 <b class="ok" id="statOk">0</b></div>
+    <div class="stat">变化 <b class="changed" id="statChanged">0</b></div>
+  </div>
+</div>
+
+<main class="grid" id="grid"></main>
+
+<section class="history-section">
+  <div class="history-title">
+    📋 变化历史
+    <span class="count" id="historyCount">0</span>
+  </div>
+  <div class="history-list" id="historyList">
+    <div class="empty-history">暂无变化记录。启动监控后，当检测到 Banner 变化时会记录在此。</div>
+  </div>
+</section>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="modalTitle">截图对比</h3>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ============ 数据源配置 ============
+// 云端监控数据由 GitHub Actions 每日自动检测后推送。
+// 数据文件位于仓库 monitor-server/data/results.json
+// 前端尝试多种路径读取：同源 > CloudStudio 部署 > GitHub Raw（CORS 兼容）
+const GITHUB_USER = ''; // 填你的 GitHub 用户名，留空则跳过 GitHub 数据源
+const GITHUB_REPO = 'banner-monitor';  // 填你的仓库名
+const GITHUB_BRANCH = 'main';
+
+const DATA_SOURCES = (() => {
+  const sources = [];
+  // 1. 同源路径（GitHub Pages 模式）
+  sources.push(location.origin + '/monitor-server/data/results.json');
+  // 2. CloudStudio 部署路径
+  if (location.hostname.includes('app.codebuddy.work')) {
+    sources.push(location.origin + '/monitor-server/data/results.json');
+  }
+  // 3. GitHub Raw（需要配置用户名和仓库名）
+  if (GITHUB_USER && GITHUB_REPO) {
+    sources.push(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/monitor-server/data/results.json`);
+  }
+  return sources;
+})();
+
+// ============ 配置 ============
+const SITES = [
+  { name:'Amazon',      url:'https://www.amazon.com/',         color:'#FF9900', dark:true,  loc:'amazon.com' },
+  { name:'Shein',       url:'https://us.shein.com/',           color:'#000000', dark:false, loc:'us.shein.com' },
+  { name:'Home Depot',  url:'https://www.homedepot.com/',      color:'#F96302', dark:false, loc:'homedepot.com' },
+  { name:'Temu',        url:'https://www.temu.com/',           color:'#FB7701', dark:false, loc:'temu.com' },
+  { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com' },
+  { name:"Lowe's",      url:'https://www.lowes.com/',          color:'#004990', dark:false, loc:'lowes.com' },
+  { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true },
+];
+
+const STORAGE_KEY = 'banner-monitor-v1';
+const MAX_HISTORY = 30;
+const SHOT_WIDTH = 800;
+const SHOT_HEIGHT = 600;
+
+let cloudMode = false; // 是否连接到云端服务器
+
+// ============ 状态 ============
+let state = {
+  monitoring: false,
+  interval: 1440,
+  threshold: 18,
+  sites: {},
+  history: [],
+  lastCheck: null,
+  nextCheckAt: null,
+};
+
+let monitorTimer = null;
+let countdownTimer = null;
+let isChecking = false;
+
+// ============ 工具 ============
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function initials(name){
+  return name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function formatTime(ts){
+  if(!ts) return '--';
+  const d = new Date(ts);
+  return d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+function fetchWithTimeout(url, timeout=45000){
+  return Promise.race([
+    fetch(url, { mode:'cors' }),
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),timeout))
+  ]);
+}
+
+function blobToImage(blob){
+  return new Promise((resolve,reject)=>{
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = ()=>{ URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('img load failed')); };
+    img.src = url;
+  });
+}
+
+// ============ 感知哈希 ============
+function computeHash(img){
+  const canvas = document.createElement('canvas');
+  canvas.width = 16; canvas.height = 16;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, 16, 16);
+  const data = ctx.getImageData(0, 0, 16, 16).data;
+  const gray = [];
+  for(let i=0; i<data.length; i+=4){
+    gray.push(0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2]);
+  }
+  const avg = gray.reduce((a,b)=>a+b,0) / gray.length;
+  let hash = '';
+  for(let i=0; i<gray.length; i++){
+    hash += gray[i] > avg ? '1' : '0';
+  }
+  return hash;
+}
+
+function hammingDistance(h1, h2){
+  if(!h1 || !h2 || h1.length !== h2.length) return 999;
+  let d = 0;
+  for(let i=0; i<h1.length; i++){
+    if(h1[i] !== h2[i]) d++;
+  }
+  return d;
+}
+
+function makeThumb(img){
+  const canvas = document.createElement('canvas');
+  canvas.width = 320; canvas.height = 240;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, 320, 240);
+  return canvas.toDataURL('image/jpeg', 0.6);
+}
+
+// ============ 截图获取 ============
+function thumUrl(siteUrl){
+  return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}/${siteUrl}`;
+}
+
+async function fetchScreenshot(siteUrl){
+  const tUrl = thumUrl(siteUrl);
+  const proxies = [
+    tUrl,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`,
+  ];
+
+  for(let i=0; i<proxies.length; i++){
+    try{
+      const res = await fetchWithTimeout(proxies[i], 45000);
+      if(!res.ok) continue;
+      const blob = await res.blob();
+      if(!blob.type.startsWith('image/') && blob.size < 500) continue;
+      const img = await blobToImage(blob);
+      if(img.naturalWidth < 50) continue;
+      return { img, blob, source: i };
+    }catch(e){
+      console.log(`Proxy ${i} failed for ${siteUrl}:`, e.message);
+    }
+  }
+  throw new Error('所有截图获取方式均失败');
+}
+
+// ============ HTML 模式监控 (Wayfair等) ============
+async function fetchHTMLForSite(siteUrl){
+  // Use Wayback Machine for sites blocked by thum.io
+  const wbUrl = `https://web.archive.org/web/20260627035940id_/${siteUrl}`;
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(wbUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(wbUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(siteUrl)}`,
+  ];
+  for(let i=0; i<proxies.length; i++){
+    try{
+      const res = await fetchWithTimeout(proxies[i], 40000);
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(text.length < 1000) continue;
+      return text;
+    }catch(e){}
+  }
+  return null; // Return null instead of throwing - allow graceful fallback
+}
+
+function extractBannerImages(html){
+  // 提取所有 img src，优先大图(banner/hero/resize-xxx-wide等)
+  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+  const srcRegex = /src=["']([^"']+)["']/i;
+  const matches = [];
+  let m;
+  while((m = imgRegex.exec(html)) !== null){
+    const src = (m[1] || '').trim();
+    if(!src || src.includes('data:image/svg') || src.includes('1x1') || src.includes('pixel')) continue;
+    matches.push(src);
+  }
+  imgRegex.lastIndex = 0;
+
+  // 同时提取 source/srcset 中的图片
+  const srcsetRegex = /srcset=["']([^"']+)["']/gi;
+  while((m = srcsetRegex.exec(html)) !== null){
+    const parts = m[1].split(',');
+    parts.forEach(p=>{
+      const u = p.trim().split(/\s+/)[0];
+      if(u && !u.includes('data:')) matches.push(u);
+    });
+  }
+
+  // 去重并按疑似banner排序：URL中包含resize/hero/banner/keywords的更靠前
+  const unique = [...new Set(matches)];
+  const scored = unique.map(u=>{
+    let score = 0;
+    if(u.includes('resize-h') && (u.includes('w2000')||u.includes('w1200')||u.includes('w960'))) score += 5;
+    if(u.includes('hero') || u.includes('banner') || u.includes('Hero')) score += 4;
+    if(u.includes('resize-h')||u.includes('compr-r85')) score += 3;
+    if(u.includes('resize')) score += 2;
+    if(u.includes('jpg')||u.includes('png')||u.includes('webp')) score += 1;
+    const low = u.toLowerCase();
+    if(low.includes('sale')||low.includes('deal')||low.includes('flash')) score += 3;
+    if(low.includes('banner')||low.includes('promo')||low.includes('campaign')) score += 3;
+    return {url:u, score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0, 20).map(s=>s.url);
+}
+
+function computeTextHash(str){
+  // 简单的文本哈希：每4字符取一个charCode累加，生成256位哈希
+  let hash = '';
+  for(let i=0; i<256; i++){
+    let sum = 0;
+    for(let j=0; j<Math.min(str.length, 2000); j+=8){
+      sum += (str.charCodeAt(j)||0) * ((i+1)*(j+1));
+    }
+    hash += (sum % 2 === 0) ? '1' : '0';
+  }
+  return hash;
+}
+
+function makeHTMLThumb(images, siteName){
+  const canvas = document.createElement('canvas');
+  canvas.width = 320; canvas.height = 240;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(0, 0, 320, 240);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.fillText(siteName + ' HTML监控模式', 12, 24);
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 11px -apple-system, sans-serif';
+  ctx.fillText(`已捕获 ${images.length} 张Banner图片`, 12, 48);
+  images.slice(0, 4).forEach((url, i)=>{
+    const y = 72 + i * 40;
+    ctx.fillStyle = '#374151';
+    ctx.fillRect(10, y-12, 300, 36);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '10px -apple-system, sans-serif';
+    const short = url.replace(/^https?:\/\/[^/]+/, '').slice(0, 55);
+    ctx.fillText(`🖼 ${short}`, 16, y+8);
+  });
+  if(images.length > 4){
+    ctx.fillStyle = '#4a5568';
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillText(`...等共 ${images.length} 张图片`, 12, 72+4*40+10);
+  }
+  return canvas.toDataURL('image/jpeg', 0.7);
+}
+
+// ============ 检测单个网站 ============
+async function checkSite(site){
+  const siteState = state.sites[site.name] || {};
+  state.sites[site.name] = { ...siteState, status:'checking' };
+  renderCards();
+
+  try{
+    let hash, thumb, bannerImages = null;
+
+    if(site.htmlMode){
+      // HTML模式: 抓取页面HTML，提取Banner图片URL做哈希
+      const html = await fetchHTMLForSite(site.url);
+      if(html){
+        bannerImages = extractBannerImages(html);
+        const imgStr = bannerImages.join('\n');
+        hash = computeTextHash(imgStr);
+        thumb = makeHTMLThumb(bannerImages, site.name);
+      } else {
+        // Wayfair 无法自动截图（反爬保护），标记为需手动检查
+        hash = 'wayfair-manual-' + Date.now();
+        thumb = null;
+        bannerImages = [];
+      }
+    }else{
+      // 普通模式: 截图对比
+      const { img } = await fetchScreenshot(site.url);
+      hash = computeHash(img);
+      thumb = makeThumb(img);
+    }
+
+    const now = Date.now();
+    const prev = siteState.hash;
+    let status = 'normal';
+    let changed = false;
+
+    if(site.htmlMode && !thumb){
+      // Wayfair无法自动监控，标记为需手动检查
+      status = 'normal';
+      changed = false;
+    }else if(prev){
+      const dist = hammingDistance(prev, hash);
+      if(dist > state.threshold){
+        status = 'changed';
+        changed = true;
+      }
+    }else{
+      status = 'baseline';
+    }
+
+    const oldThumb = changed ? siteState.thumb : null;
+
+    state.sites[site.name] = {
+      ...siteState,
+      status,
+      hash,
+      thumb,
+      oldThumb,
+      lastCheck: now,
+      lastDist: changed ? hammingDistance(prev, hash) : (prev ? hammingDistance(prev, hash) : 0),
+      changes: (siteState.changes || 0) + (changed ? 1 : 0),
+      errorCount: 0,
+      bannerImages: bannerImages || null,
+    };
+
+    if(changed){
+      const dist = hammingDistance(prev, hash);
+      addHistory(site, now, oldThumb, thumb, dist);
+      notify(site.name, dist);
+      playAlert();
+    }
+
+    saveState();
+    renderCards();
+    return { status, changed };
+
+  }catch(e){
+    console.error(`Check failed for ${site.name}:`, e);
+    const ec = (siteState.errorCount || 0) + 1;
+    state.sites[site.name] = {
+      ...siteState,
+      status:'error',
+      lastCheck: Date.now(),
+      errorCount: ec,
+      errorMsg: e.message,
+    };
+    saveState();
+    renderCards();
+    return { status:'error', changed:false };
+  }
+}
+
+// ============ 检测所有网站 ============
+async function checkAll(manual=false){
+  if(isChecking) return;
+  isChecking = true;
+  state.lastCheck = Date.now();
+  showToast('info','🔍 开始检测',`正在获取 ${SITES.length} 个平台的最新截图...`);
+
+  for(let i=0; i<SITES.length; i++){
+    await checkSite(SITES[i]);
+    if(i < SITES.length - 1) await sleep(2500);
+  }
+
+  state.nextCheckAt = state.monitoring ? Date.now() + state.interval * 60000 : null;
+  isChecking = false;
+  updateStats();
+  showToast('success','✅ 检测完成',`本次检测完成，${formatTime(Date.now())}`);
+  saveState();
+}
+
+// ============ 通知 ============
+function notify(siteName, dist){
+  // 浏览器通知
+  if('Notification' in window && Notification.permission === 'granted'){
+    try{
+      new Notification(`🔔 ${siteName} Banner 变化！`, {
+        body: `检测到首页 Banner 发生变化（差异度: ${dist}），点击查看详情。`,
+        icon: 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="%23ef4444"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`),
+        tag: siteName,
+      });
+    }catch(e){}
+  }
+  // Toast
+  showToast('alert', `🔔 ${siteName} Banner 变化！`, `首页 Banner 已更新，差异度 ${dist}。点击卡片查看对比。`);
+}
+
+function showToast(type, title, msg){
+  const container = document.getElementById('toasts');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icon = type === 'alert' ? '🔔' : type === 'success' ? '✅' : 'ℹ️';
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+    <div class="toast-close">✕</div>
+  `;
+  toast.querySelector('.toast-close').onclick = ()=>removeToast(toast);
+  container.appendChild(toast);
+  setTimeout(()=>removeToast(toast), 8000);
+}
+
+function removeToast(toast){
+  if(!toast.parentNode) return;
+  toast.classList.add('removing');
+  setTimeout(()=>toast.remove(), 300);
+}
+
+function playAlert(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const playTone = (freq, start, duration)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration);
+    };
+    playTone(880, 0, 0.15);
+    playTone(660, 0.18, 0.15);
+    playTone(880, 0.36, 0.2);
+  }catch(e){}
+}
+
+// ============ 变化历史 ============
+function addHistory(site, ts, oldThumb, newThumb, dist){
+  state.history.unshift({ site:site.name, color:site.color, ts, oldThumb, newThumb, dist });
+  if(state.history.length > MAX_HISTORY) state.history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  const count = document.getElementById('historyCount');
+  count.textContent = state.history.length;
+
+  if(state.history.length === 0){
+    el.innerHTML = '<div class="empty-history">暂无变化记录。启动监控后，当检测到 Banner 变化时会记录在此。</div>';
+    return;
+  }
+
+  el.innerHTML = state.history.map(h=>`
+    <div class="history-item" onclick="openCompare('${h.site}', ${h.ts})">
+      <div class="hi-time">${formatTime(h.ts)}</div>
+      <div class="hi-site" style="border-left:3px solid ${h.color}">${h.site}</div>
+      <div class="hi-desc">Banner 发生变化，差异度 <b>${h.dist}</b> / 256</div>
+      <div class="hi-arrow">→</div>
+    </div>
+  `).join('');
+}
+
+// ============ 截图对比弹窗 ============
+function openCompare(siteName, ts){
+  const h = state.history.find(x=>x.site===siteName && x.ts===ts);
+  if(!h) return;
+
+  document.getElementById('modalTitle').textContent = `${h.site} Banner 变化对比 — ${formatTime(h.ts)}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="compare-col">
+      <h4>变化前 <span class="tag-old">OLD</span></h4>
+      ${h.oldThumb ? `<img class="compare-img" src="${h.oldThumb}">` : '<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:#374151">无旧截图</div>'}
+      <div class="compare-info">变化前的首页截图</div>
+    </div>
+    <div class="compare-col">
+      <h4>变化后 <span class="tag-new">NEW</span></h4>
+      ${h.newThumb ? `<img class="compare-img" src="${h.newThumb}">` : '<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:#374151">无新截图</div>'}
+      <div class="compare-info">差异度 <b>${h.dist} / 256</b></div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal(e){
+  if(e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ============ 渲染 ============
+function renderCards(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = SITES.map(site=>{
+    const s = state.sites[site.name] || {};
+    const status = s.status || 'pending';
+    const statusText = {
+      normal:'正常', changed:'已变化', checking:'检测中',
+      error:'错误', baseline:'已建基线', pending:'未检测'
+    }[status];
+    const txtColor = site.dark ? '#1a1f36' : '#fff';
+
+    let shotContent = '';
+    if(cloudMode && (status === 'normal' || status === 'baseline') && !site.htmlMode){
+      // 云端模式：使用 thum.io 生成实时截图预览
+      const thumUrl = `https://image.thum.io/get/width/400/crop/300/${encodeURIComponent(site.url)}`;
+      shotContent = `<img src="${thumUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:100%;height:100%;object-fit:cover">
+        <div class="placeholder" style="display:none"><div>📐</div><div>截图加载中...</div></div>`;
+      if(s.status === 'changed'){
+        shotContent += '<div class="changed-tag">CHANGED</div>';
+      }
+    }else if(site.htmlMode && (status === 'normal' || status === 'baseline' || status === 'pending')){
+      shotContent = `<div class="placeholder">
+        <div style="font-size:28px;margin-bottom:4px">🔗</div>
+        <div style="color:#e2e8f0;font-weight:600;font-size:13px">需手动检查</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;max-width:220px">Wayfair 屏蔽自动化截图，<br>请通过下方按钮手动查看对比</div>
+      </div>`;
+    }else if(status === 'checking'){
+      shotContent = `
+        ${s.thumb ? `<img src="${s.thumb}" style="opacity:.3">` : `<div class="placeholder"><div>等待截图...</div></div>`}
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      `;
+    }else if(s.thumb){
+      shotContent = `<img src="${s.thumb}">${status==='changed'?'<div class="changed-tag">CHANGED</div>':''}`;
+    }else if(site.htmlMode){
+      shotContent = `<div class="placeholder"><div>🔍</div><div>HTML监控模式</div><div style="font-size:11px;color:#374151">点击「立即检测」开始</div></div>`;
+    }else{
+      shotContent = `<div class="placeholder"><div>📐</div><div>点击「立即检测」获取截图</div></div>`;
+    }
+
+    const distInfo = s.lastDist != null && s.lastDist > 0 ? `差异度 ${s.lastDist}` : '';
+    const errMsg = s.errorMsg ? `错误: ${s.errorMsg}` : '';
+
+    return `
+      <div class="card ${status}" onclick="window.open('${site.url}','_blank')">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="site-icon" style="background:${site.color};color:${txtColor}">${initials(site.name)}</div>
+            <div>
+              <div class="site-name">${site.name}</div>
+              <div class="site-url">${site.loc}</div>
+            </div>
+          </div>
+          <div class="status-badge ${status}"><span class="sd"></span>${statusText}</div>
+        </div>
+        <div class="shot-wrap">${shotContent}</div>
+        <div class="card-foot">
+          <div class="foot-info">
+            ${s.lastCheck ? `上次检测: <b>${formatTime(s.lastCheck)}</b>` : '尚未检测'}<br>
+            ${s.changes ? `变化次数: <b>${s.changes}</b>` : ''} ${distInfo} ${errMsg}
+          </div>
+          <div class="foot-actions" onclick="event.stopPropagation()">
+            ${site.htmlMode ? `<a class="foot-btn" href="https://web.archive.org/web/20260627035940if_/${site.url}" target="_blank" title="通过Wayback Machine查看存档">📦 存档页</a><a class="foot-btn" href="${site.url}" target="_blank" title="直接访问Wayfair">🌐 实况</a>` : ''}
+            ${site.htmlMode ? '' : (s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url)}" target="_blank">查看实时</a>` : '')}
+            ${s.oldThumb ? `<a class="foot-btn compare" onclick="openCompare('${site.name}', ${s.lastCheck})">对比</a>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStats(){
+  let ok=0, changed=0;
+  SITES.forEach(s=>{
+    const st = state.sites[s.name];
+    if(!st) return;
+    if(st.status === 'normal' || st.status === 'baseline') ok++;
+    if(st.status === 'changed') changed++;
+  });
+  document.getElementById('statOk').textContent = ok;
+  document.getElementById('statChanged').textContent = changed;
+}
+
+function updateLiveIndicator(){
+  const dot = document.getElementById('liveDot');
+  const text = document.getElementById('liveText');
+  const btn = document.getElementById('startBtn');
+  if(state.monitoring){
+    dot.className = 'live-dot running';
+    text.textContent = '监控运行中';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> 暂停监控';
+  }else{
+    dot.className = 'live-dot stopped';
+    text.textContent = '监控未启动';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> 启动监控';
+  }
+}
+
+function updateCountdown(){
+  const el = document.getElementById('countdown');
+  if(!state.monitoring || !state.nextCheckAt || isChecking){
+    el.textContent = '';
+    return;
+  }
+  const remain = Math.max(0, state.nextCheckAt - Date.now());
+  if(remain === 0){
+    el.textContent = '正在检测...';
+    return;
+  }
+  const totalSec = Math.floor(remain / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if(days > 0){
+    el.textContent = `下次检测: ${days}天 ${hours}时 ${mins}分`;
+  }else if(hours > 0){
+    el.textContent = `下次检测: ${hours}时 ${mins}:${String(secs).padStart(2,'0')}`;
+  }else{
+    el.textContent = `下次检测: ${mins}:${String(secs).padStart(2,'0')}`;
+  }
+}
+
+// ============ 监控控制 ============
+function toggleMonitor(){
+  if(state.monitoring){
+    stopMonitoring();
+  }else{
+    startMonitoring();
+  }
+}
+
+function startMonitoring(){
+  state.monitoring = true;
+  state.nextCheckAt = Date.now();
+  updateLiveIndicator();
+  saveState();
+
+  // 请求通知权限
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+
+  showToast('success','🚀 监控已启动',`检测间隔 ${state.interval} 分钟，灵敏度 ${state.threshold > 20 ? '低' : state.threshold > 12 ? '中' : '高'}。`);
+
+  // 立即执行一次检测
+  checkAll();
+
+  // 定时器
+  monitorTimer = setInterval(()=>{
+    if(!isChecking) checkAll();
+  }, state.interval * 60000);
+
+  // 倒计时
+  countdownTimer = setInterval(updateCountdown, 1000);
+}
+
+function stopMonitoring(){
+  state.monitoring = false;
+  state.nextCheckAt = null;
+  if(monitorTimer){ clearInterval(monitorTimer); monitorTimer = null; }
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
+  updateLiveIndicator();
+  updateCountdown();
+  saveState();
+  showToast('info','⏸ 监控已暂停','可随时重新启动。');
+}
+
+function changeInterval(){
+  const val = parseInt(document.getElementById('intervalSelect').value);
+  state.interval = val;
+  if(state.monitoring){
+    stopMonitoring();
+    startMonitoring();
+  }
+  saveState();
+}
+
+function changeThreshold(){
+  const val = parseInt(document.getElementById('thresholdSelect').value);
+  state.threshold = val;
+  saveState();
+  showToast('info','⚙ 灵敏度已更新',`变化检测阈值: ${val}（值越低越敏感）`);
+}
+
+function clearAllChanges(){
+  SITES.forEach(s=>{
+    const st = state.sites[s.name];
+    if(st && st.status === 'changed'){
+      st.status = 'normal';
+      st.oldThumb = null;
+    }
+  });
+  renderCards();
+  updateStats();
+  saveState();
+  showToast('success','✅ 已清除','所有变化标记已重置。');
+}
+
+// ============ 持久化 ============
+function saveState(){
+  try{
+    // 只保存必要数据，缩略图可能很大
+    const toSave = {
+      monitoring: state.monitoring,
+      interval: state.interval,
+      threshold: state.threshold,
+      lastCheck: state.lastCheck,
+      sites: {},
+      history: state.history.slice(0, MAX_HISTORY),
+    };
+    SITES.forEach(s=>{
+      const st = state.sites[s.name];
+      if(st){
+        toSave.sites[s.name] = {
+          hash: st.hash,
+          thumb: st.thumb,
+          lastCheck: st.lastCheck,
+          changes: st.changes || 0,
+          status: st.status === 'checking' ? 'normal' : st.status,
+          lastDist: st.lastDist,
+        };
+      }
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  }catch(e){
+    // localStorage 满了，清理旧历史
+    if(state.history.length > 5){
+      state.history = state.history.slice(0, 5);
+      saveState();
+    }
+  }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    state.interval = saved.interval || 15;
+    state.threshold = saved.threshold || 18;
+    state.lastCheck = saved.lastCheck;
+    state.history = saved.history || [];
+    state.sites = saved.sites || {};
+    // 恢复后状态不是checking
+    Object.values(state.sites).forEach(s=>{
+      if(s.status === 'checking') s.status = 'normal';
+    });
+  }catch(e){}
+}
+
+// ============ 云端 API 交互 ============
+// ============ 云端数据加载 ============
+// 从多个数据源尝试加载 results.json（GitHub Actions 每日更新）
+async function fetchCloudResults(){
+  for (const url of DATA_SOURCES) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data && data.sites && Object.keys(data.sites).length > 0) {
+        console.log(`✅ 数据加载成功: ${url}`);
+        return data;
+      }
+    } catch (e) {
+      console.log(`⚠️ 数据源不可用: ${url} — ${e.message}`);
+    }
+  }
+  console.log('❌ 所有数据源均不可用');
+  return null;
+}
+
+function syncCloudToState(cloudData){
+  if(!cloudData || !cloudData.sites) return;
+  const siteIds = {
+    'amazon': 'amazon', 'shein': 'shein', 'homedepot': 'homedepot',
+    'temu': 'temu', 'aliexpress': 'aliexpress', 'lowes': 'lowes', 'wayfair': 'wayfair'
+  };
+
+  SITES.forEach(site => {
+    const id = siteIds[site.name.toLowerCase().replace(/[^a-z]/g, '')];
+    const c = cloudData.sites[id];
+    if(!c) return;
+
+    const existing = state.sites[site.name] || {};
+    state.sites[site.name] = {
+      ...existing,
+      status: c.status || 'normal',
+      hash: c.hash,
+      lastCheck: c.lastCheck,
+      lastDist: c.lastDist,
+      changes: c.changes || 0,
+      errorCount: c.errorCount || 0,
+    };
+  });
+
+  // 同步变化历史
+  if(cloudData.history && cloudData.history.length > 0){
+    state.history = cloudData.history.map(h => ({
+      site: h.siteName || h.site,
+      color: (SITES.find(s => s.name === (h.siteName || h.site)) || {}).color || '#888',
+      ts: h.time,
+      dist: h.dist,
+      oldHash: h.oldHash,
+      newHash: h.newHash,
+    }));
+    document.getElementById('historyCount').textContent = state.history.length;
+  }
+
+  state.lastCheck = cloudData.lastCheck;
+}
+
+// ============ 初始化 ============
+async function init(){
+  // 1. 先加载本地缓存数据（即时显示）
+  loadState();
+  document.getElementById('intervalSelect').value = state.interval;
+  document.getElementById('thresholdSelect').value = state.threshold;
+
+  // 2. 尝试加载云端数据（GitHub Actions 每日更新）
+  const cloudData = await fetchCloudResults();
+
+  if(cloudData){
+    cloudMode = true;
+    syncCloudToState(cloudData);
+    document.getElementById('liveDot').className = 'live-dot running';
+    document.getElementById('liveText').textContent = '☁️ 云端监控运行中';
+    document.getElementById('startBtn').style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+    document.getElementById('startBtn').onclick = () => checkAll(false);
+
+    const checkTime = cloudData.lastCheck ? formatTime(cloudData.lastCheck) : '未知';
+    const changedCount = cloudData.history
+      ? cloudData.history.filter(h => h.time > Date.now() - 86400000).length
+      : 0;
+    showToast('success','☁️ 云端数据已加载',
+      `上次检测: ${checkTime} | 近24h变化: ${changedCount}次 | GitHub Actions 每日自动运行`);
+  } else {
+    cloudMode = false;
+    document.getElementById('liveDot').className = 'live-dot stopped';
+    document.getElementById('liveText').textContent = '⏳ 等待云端首次数据...';
+    document.getElementById('startBtn').style.background = 'linear-gradient(135deg,#4f6ef7,#7c3aed)';
+  }
+
+  renderCards();
+  renderHistory();
+  updateStats();
+
+  // 3. 定时刷新云端数据（每10分钟）
+  setInterval(async () => {
+    const data = await fetchCloudResults();
+    if(data){
+      syncCloudToState(data);
+      renderCards();
+      updateStats();
+      if(!cloudMode){
+        cloudMode = true;
+        document.getElementById('liveDot').className = 'live-dot running';
+        document.getElementById('liveText').textContent = '☁️ 云端监控运行中';
+      }
+    }
+  }, 600000);
+}
+
+// ============ 本地手动检测 ============
+async function triggerLocalCheck(){
+  checkAll(false);
+}
+
+init();
+</script>
+</body>
+</html>

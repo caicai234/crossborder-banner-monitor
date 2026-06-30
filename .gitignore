@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Local data (cloud data is stored on GitHub)
+monitor-server/data/screenshots/*.jpg
+monitor-server/data/screenshots/*.png
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.tmp
+*.temp
+.github/
+gh.zip
+gh/

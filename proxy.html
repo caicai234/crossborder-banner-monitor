@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>云端浏览器 · 跨境通</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--grad:linear-gradient(135deg,#4f6ef7 0%,#7b5cff 50%,#b14ff7 100%);--ink:#1a1f36;--muted:#6b7280;--line:#eceef3;--bg:#f7f8fc}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* Top bar */
+.bar{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:13px}
+.bar a{color:#4f6ef7;font-weight:700;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.bar a svg{width:15px;height:15px}
+.bar .target{font-size:18px;font-weight:800;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .target span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Tabs */
+.tabs{position:sticky;top:53px;z-index:190;background:#fff;border-bottom:2px solid var(--line);display:flex;padding:0 20px;gap:4px;overflow-x:auto}
+.tab{padding:10px 20px;border:none;background:none;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:#4f6ef7}
+.tab.active{color:#4f6ef7;border-bottom-color:#4f6ef7}
+
+/* Content area */
+.content{max-width:1100px;margin:0 auto;padding:24px}
+
+/* Screenshot tab */
+.screenshot-section{text-align:center}
+.screenshot-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.screenshot-wrap img{width:100%;display:block;background:#fff}
+.screenshot-controls{display:flex;align-items:center;gap:8px;justify-content:center;margin:16px 0}
+.ctrl-btn{padding:8px 16px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;transition:all .15s}
+.ctrl-btn:hover{border-color:#7b5cff;color:#4f6ef7;background:#f8f9ff}
+.ctrl-btn.primary{background:var(--grad);color:#fff;border-color:transparent}
+.zoom-info{font-size:12px;font-weight:700;color:var(--muted);min-width:44px;text-align:center}
+.screenshot-note{margin-top:16px;font-size:12px;color:var(--muted)}
+
+/* Data section */
+.data-section{display:none}
+.data-section.active{display:block}
+.data-card{background:#fff;border-radius:16px;border:1px solid var(--line);padding:28px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.03)}
+.data-card h2{font-size:22px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.data-card h2 .icon{font-size:26px}
+.data-card p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+
+/* Category grid */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:12px}
+.cat-item{padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);text-align:center;font-size:13px;font-weight:600;transition:all .15s;cursor:default}
+.cat-item:hover{border-color:#7b5cff;color:#4f6ef7;background:#f8f9ff}
+.cat-item .count{font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px}
+
+/* Product list */
+.prod-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
+.prod-item{border:1.5px solid var(--line);border-radius:12px;padding:16px;transition:all .15s}
+.prod-item:hover{border-color:#7b5cff;box-shadow:0 4px 12px rgba(123,92,255,.1)}
+.prod-name{font-size:13px;font-weight:600;line-height:1.45;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prod-price{font-size:18px;font-weight:800;color:#ef4444}
+.prod-meta{display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--muted)}
+.prod-meta span{display:inline-flex;align-items:center;gap:3px}
+.tag-hot{display:inline-block;background:#fef2f2;color:#ef4444;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px}
+
+/* Info boxes */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:12px}
+.info-box{padding:16px;border-radius:12px;border:1.5px solid var(--line);background:#fafbff}
+.info-box .label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.info-box .value{font-size:16px;font-weight:800;color:var(--ink);margin-top:4px}
+
+/* No data placeholder */
+.no-data{padding:40px;text-align:center;color:var(--muted)}
+.no-data svg{width:48px;height:48px;stroke:var(--line);margin-bottom:12px}
+
+/* Footer note */
+.foot-bar{background:#fefce8;border:1.5px solid #fde68a;border-radius:12px;padding:16px 20px;margin-top:24px;font-size:13px;color:#92400e;line-height:1.6}
+.foot-bar b{color:#78350f}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>返回导航</a>
+  <div class="target">🌐 <span id="siteName">加载中</span></div>
+  <a id="directLink" href="#" target="_blank" rel="noopener noreferrer">直接访问 ↗</a>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="screen">📸 页面截图</div>
+  <div class="tab" data-tab="data">📊 平台数据</div>
+  <div class="tab" data-tab="about">ℹ️ 平台介绍</div>
+</div>
+
+<div class="content">
+  <!-- Tab 1: Screenshot -->
+  <div id="screenTab">
+    <div class="screenshot-section">
+      <div class="screenshot-controls">
+        <button class="ctrl-btn" onclick="zoom(-1)">− 缩小</button>
+        <span class="zoom-info" id="zoomInfo">100%</span>
+        <button class="ctrl-btn" onclick="zoom(1)">+ 放大</button>
+        <button class="ctrl-btn" onclick="zoom(0)">重置</button>
+      </div>
+      <div class="screenshot-wrap"><img id="screenImg" src="" alt="截图"></div>
+      <p class="screenshot-note">💡 截图由海外服务器预渲染后缓存到本站，无需VPN即可查看 · 点击「直接访问」需开启VPN</p>
+    </div>
+  </div>
+
+  <!-- Tab 2: Data -->
+  <div id="dataTab" class="data-section"></div>
+
+  <!-- Tab 3: About -->
+  <div id="aboutTab" class="data-section"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const targetUrl = params.get('url') || '';
+const siteName = params.get('name') || '';
+let currentZoom = 100;
+
+// Platform database
+const PLATFORMS = {
+  'https://us.shein.com': {
+    img: 'shein-screenshot.jpg',
+    name: 'Shein US站',
+    url: 'https://us.shein.com',
+    about: {
+      desc: 'Shein（希音）是全球最大的跨境快时尚电商平台之一，以极致性价比和快速上新著称。总部位于新加坡，供应链在中国，主要面向欧美市场。',
+      founded: '2008年',
+      headquarters: '新加坡',
+      mainMarkets: '美国、欧洲、中东、拉美',
+      gmv: '$450亿+ (2024)',
+      sellerCount: '60万+',
+      categories: '女装、男装、童装、美妆、家居、宠物、运动、配饰等30+大类'
+    },
+    categories: [
+      {name:'Women 女装', count:'热销TOP1'},
+      {name:'Shoes 鞋履', count:''},
+      {name:'Curve 大码', count:''},
+      {name:'Beachwear 泳装', count:''},
+      {name:'Kids 童装', count:''},
+      {name:'Home & Living 居家生活', count:'增长最快'},
+      {name:'Men 男装', count:''},
+      {name:'Beauty & Health 美妆健康', count:''},
+      {name:'Baby & Maternity 母婴', count:''},
+      {name:'Sports & Outdoor 运动户外', count:''},
+      {name:'Jewelry & Accessories 配饰珠宝', count:''},
+      {name:'Underwear & Sleepwear 内衣睡衣', count:''},
+      {name:'Toys & Games 玩具游戏', count:''},
+      {name:'Bags & Luggage 包包箱包', count:''},
+      {name:'Electronics 数码电子', count:''},
+      {name:'Home Appliances 家用电器', count:''},
+      {name:'Pet Supplies 宠物用品', count:''},
+      {name:'Automotive 汽车配件', count:''},
+      {name:'Tools 工具', count:''}
+    ],
+    products: [
+      {name:'Flash Sale 限时闪购 — 最高73% OFF', price:'$3.99起', hot:true, reviews:'10万+'},
+      {name:'New Arrivals 新品首发 — #VacayVibes 夏日系列', price:'$9.99起', hot:true, reviews:'5万+'},
+      {name:'Plus Size Week 大码周专场', price:'$5.99起', hot:false, reviews:'2万+'},
+      {name:'Apple 苹果配件专区 — 10% OFF', price:'$19.99起', hot:false, reviews:'8000+'},
+      {name:'Puma 运动装备 — 最高27% OFF', price:'$29.99起', hot:false, reviews:'5000+'}
+    ]
+  },
+  'https://www.temu.com': {
+    img: 'temu-screenshot.jpg',
+    name: 'Temu',
+    url: 'https://www.temu.com',
+    about: {
+      desc: 'Temu 是拼多多（PDD Holdings）旗下的跨境电商平台，2022年进入美国市场，凭借极致低价和社交裂变模式快速崛起，覆盖全球80+国家。',
+      founded: '2022年',
+      headquarters: '波士顿 / 上海',
+      mainMarkets: '北美、欧洲、澳洲、拉美、亚洲多国',
+      gmv: '$180亿+ (2024)',
+      sellerCount: '80万+',
+      categories: '全品类，主打服装、家居、数码、美妆、工具等'
+    },
+    categories: [
+      {name:'Amazing Finds 超值精选', count:'主推频道'},
+      {name:"Women's Fashion 女装时尚", count:''},
+      {name:'Home 家居生活', count:''},
+      {name:'Beauty & Health 美妆健康', count:''},
+      {name:'Electronics 数码电子', count:''},
+      {name:"Men's Fashion 男装时尚", count:''},
+      {name:'Sports & Outdoors 运动户外', count:''},
+      {name:'Toys & Games 玩具游戏', count:''},
+      {name:'Tools & Hardware 工具五金', count:''},
+      {name:'Automotive 汽车配件', count:''},
+      {name:'Pet Supplies 宠物用品', count:''},
+      {name:'Jewelry & Accessories 珠宝配饰', count:''}
+    ],
+    products: [
+      {name:'五色可选女士无钢圈贝壳纹前扣文胸', price:'S$4.42', hot:true, sold:'200K+', reviews:'2.89万'},
+      {name:'可充电压缩空气吹尘器 150000RPM 三档调速', price:'S$11.65', hot:true, sold:'28K+', reviews:'130'},
+      {name:'加绒记忆棉男士冬季保暖家居拖鞋', price:'S$9.56', hot:false, sold:'2.4K+', reviews:'167'},
+      {name:'汽车遮阳板眼镜夹 PVC材质 车载眼镜架', price:'S$1.50', hot:true, sold:'600K+', reviews:'1.05万'},
+      {name:'女士无缝舒适露背V领细肩带四绑带文胸 多色', price:'S$3.46', hot:true, sold:'26K+', reviews:'1770'}
+    ]
+  },
+  'https://www.homedepot.com': {
+    img: 'homedepot-screenshot.jpg',
+    name: 'Home Depot',
+    url: 'https://www.homedepot.com',
+    about: {
+      desc: 'Home Depot（家得宝）是美国最大的家装零售商和全球最大的家居建材零售商之一。主营建材、园艺、家电、工具、卫浴、厨房等全品类家装产品。',
+      founded: '1978年',
+      headquarters: '亚特兰大，佐治亚州',
+      mainMarkets: '美国、加拿大、墨西哥',
+      gmv: '$1575亿 (FY2024)',
+      stores: '2300+',
+      categories: '家电、建材、工具、卫浴、厨房、园艺、油漆、地板、照明、门窗等'
+    },
+    categories: [
+      {name:'Appliances 家电', count:'核心品类'},
+      {name:'Tools & Hardware 五金工具', count:''},
+      {name:'Building Materials 建筑材料', count:''},
+      {name:'Kitchen & Bath 厨卫', count:''},
+      {name:'Lighting & Ceiling 照明吊顶', count:''},
+      {name:'Paint & Decor 油漆装饰', count:''},
+      {name:'Flooring 地板瓷砖', count:''},
+      {name:'Garden Center 园艺中心', count:''},
+      {name:'Plumbing 水暖管件', count:''},
+      {name:'Electrical 电气设备', count:''},
+      {name:'Storage & Organization 收纳整理', count:''},
+      {name:'Windows & Doors 门窗', count:''},
+      {name:'Smart Home 智能家居', count:'增长快'}
+    ],
+    products: [
+      {name:'Father\'s Day 礼品精选 — TOP 100+ Gifts', price:'$119起', hot:true, tag:'限时活动'},
+      {name:'电动割草机 Ryobi 40V 无绳草坪机', price:'$429', hot:false, was:'$479'},
+      {name:'不锈钢户外烧烤架 4燃烧器', price:'$299', hot:false, was:'$359'},
+      {name:'户外庭院家具套组 5件套', price:'$398', hot:false, was:'$549'},
+      {name:'Power Tools 电动工具 — UP TO 40% OFF', price:'$79起', hot:true, tag:'限时促销'},
+      {name:'Major Appliances 大家电 — Starting $398', price:'$398起', hot:false, tag:'7月4日活动'}
+    ]
+  },
+  'https://shop.tiktok.com': {
+    img: 'tiktokshop-screenshot.jpg',
+    name: 'TikTok Shop',
+    url: 'https://shop.tiktok.com',
+    about: {
+      desc: 'TikTok Shop 是字节跳动旗下短视频平台 TikTok 的电商业务模块，通过直播带货和短视频种草模式在全球迅速扩张。目前已在美国、英国、东南亚等多国落地运营。',
+      founded: '2021年',
+      headquarters: '洛杉矶 / 新加坡 / 深圳',
+      mainMarkets: '美国、英国、印尼、泰国、越南、菲律宾、马来西亚',
+      gvm: '$200亿+ (2024)',
+      sellers: '150万+',
+      categories: '服装美妆、数码电子、家居生活、食品保健等'
+    },
+    categories: [
+      {name:'Fashion 服饰时尚', count:'直播爆款最多'},
+      {name:'Beauty 美妆护肤', count:''},
+      {name:'Home & Kitchen 居家厨具', count:''},
+      {name:'Electronics 数码科技', count:''},
+      {name:'Health & Wellness 健康保健', count:''},
+      {name:'Toys & Games 玩具游戏', count:''},
+      {name:'Pet Supplies 宠物用品', count:''},
+      {name:'Sports & Outdoors 运动户外', count:''},
+      {name:'Baby & Kids 母婴童装', count:''}
+    ],
+    products: [
+      {name:'直播间爆款 — 直播间专属价', price:'¥29.9起', hot:true, tag:'LIVE'},
+      {name:'短视频种草 — 达人推荐好物', price:'$9.99起', hot:true, tag:'TRENDING'},
+      {name:'TikTok Made Me Buy It 爆款系列', price:'$19.99起', hot:false, tag:'热门话题'},
+      {name:'Shop Your Faves — 关注店铺新品', price:'$15起', hot:false, tag:'关注有礼'}
+    ]
+  }
+};
+
+if (!targetUrl) {
+  document.querySelector('.content').innerHTML =
+    '<div style="text-align:center;padding:80px 20px"><h2 style="font-size:22px;margin-bottom:12px">未指定目标URL</h2><p style="color:#6b7280;margin:8px 0 20px">请从导航站点击「云端浏览」按钮进入</p><a href="index.html" style="padding:14px 28px;border-radius:14px;background:var(--grad);color:#fff;font-weight:800;text-decoration:none;font-size:15px">← 返回导航站</a></div>';
+  throw new Error('No URL');
+}
+
+document.getElementById('siteName').textContent = siteName || targetUrl;
+document.getElementById('directLink').href = targetUrl;
+
+const plat = PLATFORMS[targetUrl];
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('screenTab').style.display = 'none';
+    document.getElementById('dataTab').classList.remove('active');
+    document.getElementById('aboutTab').classList.remove('active');
+    if (tab.dataset.tab === 'screen') document.getElementById('screenTab').style.display = 'block';
+    else if (tab.dataset.tab === 'data') document.getElementById('dataTab').classList.add('active');
+    else if (tab.dataset.tab === 'about') renderAbout();
+  };
+});
+
+// Zoom controls
+function zoom(dir) {
+  if (dir === 0) currentZoom = 100;
+  else currentZoom = Math.max(50, Math.min(250, currentZoom + dir * 10));
+  document.getElementById('zoomInfo').textContent = currentZoom + '%';
+  const img = document.getElementById('screenImg');
+  if (img) img.style.transform = `scale(${currentZoom/100})`;
+}
+
+// Load screenshot
+function loadScreen() {
+  const img = document.getElementById('screenImg');
+  if (plat && plat.img) {
+    img.src = plat.img;
+    img.style.transform = 'scale(1)';
+    currentZoom = 100;
+  } else {
+    document.querySelector('.screenshot-section').innerHTML =
+      '<div class="no-data"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 21-4.3-4.3"/></svg><h3>暂无缓存截图</h3><p>该平台尚未预缓存截图</p></div>';
+  }
+}
+
+// Render data tab
+function renderData() {
+  if (!plat) {
+    document.getElementById('dataTab').innerHTML = '<div class="no-data">暂无数据</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Categories card
+  html += `<div class="data-card"><h2><span class="icon">🏷️</span> 商品分类 (${plat.categories.length}个)</h2>`;
+  html += `<div class="cat-grid">${plat.categories.map(c =>
+    `<div class="cat-item">${c.name}<span class="count">${c.count}</span></div>`
+  ).join('')}</div></div>`;
+
+  // Products card
+  if (plat.products) {
+    html += `<div class="data-card"><h2><span class="icon">🔥</span> 热门商品 / 活动优惠 (${plat.products.length}条)</h2>`;
+    html += `<div class="prod-list">${plat.products.map(p =>
+      `<div class="prod-item">
+        <div class="prod-name">${p.name}${p.hot ? '<span class="tag-hot">HOT</span>' : ''}</div>
+        <div class="prod-price">${p.price}${p.was ? `<span style="font-size:13px;color:#999;text-decoration:line-through;margin-left:8px;font-weight:400">${p.was}</span>` : ''}</div>
+        <div class="prod-meta">
+          ${p.sold ? `<span>📦 ${p.sold} 已售</span>` : ''}
+          ${p.reviews ? `<span>⭐ ${p.reviews} 评价</span>` : ''}
+          ${p.tag ? `<span style="color:#7b5cff;font-weight:700">#${p.tag}` : ''}
+        </div>
+      </div>`
+    ).join('')}</div></div>`;
+  }
+
+  // Platform stats
+  if (plat.about) {
+    html += `<div class="data-card"><h2><span class="icon">📈</span> 平台关键指标</h2>`;
+    html += `<div class="info-grid">`;
+    const stats = [
+      {label:'成立时间', value:plat.about.founded},
+      {label:'总部位置', value:plat.about.headquarters},
+      {label:'主要市场', value:plat.about.mainMarkets},
+      {label:'GMV规模', value:plat.about.gmv},
+      {label:'卖家数量', value:plat.about.sellerCount || plat.about.stores || '-'},
+      {label:'品类覆盖', value:plat.about.categories}
+    ];
+    stats.forEach(s => {
+      html += `<div class="info-box"><div class="label">${s.label}</div><div class="value">${s.value}</div></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  document.getElementById('dataTab').innerHTML = html;
+}
+
+// Render about tab
+function renderAbout() {
+  if (!plat) return;
+  const a = plat.about;
+  document.getElementById('aboutTab').innerHTML = `
+    <div class="data-card">
+      <h2><span class="icon">🌐</span> 关于 ${plat.name}</h2>
+      <p>${a.desc}</p>
+      <div class="info-grid">
+        <div class="info-box"><div class="label">官网地址</div><div class="value" style="font-size:13px;word-break:break-all"><a href="${plat.url}" target="_blank" style="color:#4f6ef7">${plat.url}</a></div></div>
+        <div class="info-box"><div class="label">成立年份</div><div class="value">${a.founded}</div></div>
+        <div class="info-box"><div class="label">总部</div><div class="value">${a.headquarters}</div></div>
+        <div class="info-box"><div class="label">GMV</div><div class="value">${a.gmv}</div></div>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <b>💡 选品建议：</b>${plat.name} 是 ${plat.url.includes('shein') ? '快时尚出海标杆，适合做服装、配饰、家居类目选品' :
+        plat.url.includes('temu') ? '极致性价比平台，适合做白牌商品、日用品、小商品选品' :
+        plat.url.includes('homedepot') ? '北美家居建材第一站，适合做工具、建材、园艺类目选品' :
+        '内容电商新星，适合做短视频种货品类的选品'}。
+      数据更新时间：2026-06-30 · 截图和数据均由海外服务器获取并缓存至本站。
+    </div>`;
+  }
+  document.getElementById('aboutTab').classList.add('active');
+}
+
+// Init
+loadScreen();
+renderData();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === '1') document.querySelectorAll('.tab')[0].click();
+  if (e.key === '2') document.querySelectorAll('.tab')[1].click();
+  if (e.key === '3') document.querySelectorAll('.tab')[2].click();
+});
+</script>
+</body>
+</html>

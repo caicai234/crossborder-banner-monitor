@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境活动玩法库 — 全球电商平台活动收集站</title>
+<style>
+:root{--bg:#0a0c15;--card:#111522;--card2:#161b2e;--line:rgba(255,255,255,.06);--ink:#e4e7f0;--muted:#7a80a0;--accent:#5b7cff;--accent2:#a855f7;--accent3:#06b6d4;--red:#ef4444;--green:#22c55e;--amber:#f59e0b;--radius:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 0%,rgba(91,124,255,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(168,85,247,.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+
+/* Hero */
+.hero{position:relative;z-index:1;text-align:center;padding:48px 20px 32px}
+.hero h1{font-size:40px;font-weight:800;background:linear-gradient(135deg,#5b7cff,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;letter-spacing:-1px}
+.hero p{font-size:15px;color:var(--muted);max-width:720px;margin:0 auto;line-height:1.7}
+
+/* Stats row */
+.stats-row{position:relative;z-index:1;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 20px 32px}
+.stat-item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 24px;text-align:center;min-width:120px}
+.stat-item .val{font-size:28px;font-weight:800;background:linear-gradient(135deg,#5b7cff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-item .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Filters */
+.filters{position:relative;z-index:1;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 20px 28px}
+.filters-search{position:relative;width:260px}
+.filters-search input{width:100%;padding:10px 14px 10px 38px;background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-size:13px;outline:none;transition:border .2s}
+.filters-search input:focus{border-color:var(--accent)}
+.filters-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);width:16px;height:16px}
+.chip{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--muted);transition:all .2s;white-space:nowrap}
+.chip:hover{color:var(--ink);border-color:rgba(255,255,255,.15)}
+.chip.active{background:linear-gradient(135deg,rgba(91,124,255,.2),rgba(168,85,247,.2));border-color:var(--accent);color:#fff}
+.chip.ongoing{border-color:rgba(34,197,94,.3);color:var(--green)}
+.chip.ongoing.active{background:rgba(34,197,94,.15);border-color:var(--green)}
+.chip.upcoming{border-color:rgba(245,158,11,.3);color:var(--amber)}
+.chip.upcoming.active{background:rgba(245,158,11,.15);border-color:var(--amber)}
+
+/* Timeline strip */
+.timeline-strip{position:relative;z-index:1;padding:0 20px;margin-bottom:28px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.timeline-strip::-webkit-scrollbar{display:none}
+.timeline-inner{display:flex;gap:8px;min-width:max-content}
+.timeline-month{flex-shrink:0;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;background:var(--card);border:1px solid var(--line);color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+.timeline-month:hover{color:var(--ink);border-color:rgba(255,255,255,.15)}
+.timeline-month.active{background:linear-gradient(135deg,rgba(91,124,255,.2),rgba(168,85,247,.2));border-color:var(--accent);color:#fff}
+.timeline-month.has-activity{position:relative}
+.timeline-month.has-activity::after{content:'';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.timeline-month.has-ongoing::after{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+/* Region tabs */
+.region-tabs{position:relative;z-index:1;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 20px 28px}
+.region-tab{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1.5px solid var(--line);background:var(--card);transition:all .2s;position:relative}
+.region-tab:hover{border-color:rgba(255,255,255,.2);transform:translateY(-2px)}
+.region-tab.active{border-color:var(--accent);box-shadow:0 0 16px rgba(91,124,255,.25);transform:translateY(-2px)}
+.region-tab .dot{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+/* Main grid */
+.main{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;padding:0 20px 60px;max-width:1400px;margin:0 auto}
+@media(max-width:480px){.main{grid-template-columns:1fr}}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:all .25s;cursor:default;position:relative;overflow:hidden}
+.card:hover{border-color:rgba(255,255,255,.12);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.card.amazon::before{background:linear-gradient(90deg,#FF9900,#e68a00)}
+.card.shein::before{background:linear-gradient(90deg,#1a1a1a,#555)}
+.card.homedepot::before{background:linear-gradient(90deg,#F96302,#e55a00)}
+.card.temu::before{background:linear-gradient(90deg,#FB7701,#e03f00)}
+.card.aliexpress::before{background:linear-gradient(90deg,#E62E04,#cc2903)}
+.card.wayfair::before{background:linear-gradient(90deg,#7B189F,#5e1280)}
+.card.lowes::before{background:linear-gradient(90deg,#004990,#003a73)}
+
+/* Card header */
+.card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.card-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+.card-title{font-size:14px;font-weight:700;color:var(--ink);line-height:1.3}
+.card-subtitle{font-size:12px;color:var(--muted)}
+
+/* Status badge */
+.status-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-left:auto;flex-shrink:0}
+.status-tag.ongoing{background:rgba(34,197,94,.12);color:var(--green)}
+.status-tag.upcoming{background:rgba(245,158,11,.12);color:var(--amber)}
+.status-tag.past{background:rgba(255,255,255,.05);color:var(--muted)}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.status-tag.ongoing .status-dot{background:var(--green);animation:pulse 1.5s infinite}
+.status-tag.upcoming .status-dot{background:var(--amber)}
+.status-tag.past .status-dot{background:var(--muted)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Card body */
+.card-date{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.card-date svg{width:14px;height:14px;flex-shrink:0}
+.card-desc{font-size:13px;color:#b0b6d0;line-height:1.65;margin-bottom:14px}
+.card-mechanisms{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.mech-tag{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(91,124,255,.1);color:#8fa8ff;border:1px solid rgba(91,124,255,.15)}
+.mech-tag.orange{background:rgba(251,119,1,.1);color:#fc962f;border-color:rgba(251,119,1,.15)}
+.mech-tag.green{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.15)}
+.mech-tag.purple{background:rgba(168,85,247,.1);color:#c084fc;border-color:rgba(168,85,247,.15)}
+.mech-tag.pink{background:rgba(236,72,153,.1);color:#f472b6;border-color:rgba(236,72,153,.15)}
+.mech-tag.cyan{background:rgba(6,182,212,.1);color:#22d3ee;border-color:rgba(6,182,212,.15)}
+
+.card-steps{background:var(--card2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.7}
+.card-steps strong{color:var(--ink)}
+.card-steps ol{margin:0;padding-left:18px}
+.card-steps ol li::marker{color:var(--accent);font-weight:700}
+
+/* Card footer */
+.card-foot{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.card-foot a{font-size:12px;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .2s}
+.card-foot a:hover{color:#8fa8ff}
+.card-foot a svg{width:12px;height:12px}
+.card-target{font-size:11px;color:var(--muted);margin-left:auto}
+
+/* Empty */
+.empty{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--muted)}
+.empty b{color:var(--ink)}
+
+/* Detail modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:20px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;background:var(--card2);border:1px solid var(--line);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.modal-close:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
+.modal h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.modal .modal-platform{font-size:13px;color:var(--muted);margin-bottom:16px}
+.modal .modal-section{margin-bottom:20px}
+.modal .modal-section h3{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.modal .modal-section p{font-size:13px;color:#b0b6d0;line-height:1.75}
+
+/* Toast */
+.toast{position:fixed;top:24px;right:24px;z-index:200;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;font-size:13px;color:var(--ink);box-shadow:0 8px 30px rgba(0,0,0,.4);animation:slideIn .3s ease;display:flex;align-items:center;gap:10px}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Footer note */
+.foot-note{position:relative;z-index:1;text-align:center;padding:0 20px 40px;font-size:12px;color:var(--muted)}
+.foot-note a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>🌍 跨境活动玩法库</h1>
+  <p>收录 Amazon / Shein / Home Depot / Temu / AliExpress / Wayfair / Lowe's 七大专平台全年营销活动、促销机制与选品窗口，助你精准卡点、一击制胜。</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-row" id="statsRow"></div>
+
+<!-- Timeline -->
+<div class="timeline-strip">
+  <div class="timeline-inner" id="timelineInner"></div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+  <div class="filters-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="搜索活动、玩法、平台...">
+  </div>
+  <div class="chip active" data-status="all">全部活动</div>
+  <div class="chip ongoing" data-status="ongoing">● 进行中</div>
+  <div class="chip upcoming" data-status="upcoming">◆ 即将开始</div>
+  <div class="chip" data-status="past">● 已结束</div>
+</div>
+
+<!-- Platform tabs -->
+<div class="region-tabs" id="regionTabs"></div>
+
+<!-- Main grid -->
+<div class="main" id="main"></div>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<div class="foot-note">
+  活动数据持续更新中 · 基于各平台历年大促规律 + 2026公开信息整理 · 仅供参考，以平台官网为准 ·
+  <a href="index.html">← 返回导航站</a>
+  &nbsp;|&nbsp;
+  <a href="banner-monitor.html">Banner监控</a>
+</div>
+
+<script>
+// ========== DATA ==========
+const PLATFORMS = {
+  amazon:      { name:'Amazon',       icon:'📦', color:'#FF9900', cls:'amazon', dark:false },
+  shein:       { name:'Shein',        icon:'👗', color:'#000000', cls:'shein', dark:true },
+  homedepot:   { name:'Home Depot',   icon:'🏠', color:'#F96302', cls:'homedepot', dark:false },
+  temu:        { name:'Temu',         icon:'⚡', color:'#FB7701', cls:'temu', dark:false },
+  aliexpress:  { name:'AliExpress',   icon:'🛒', color:'#E62E04', cls:'aliexpress', dark:false },
+  wayfair:     { name:'Wayfair',      icon:'🛋', color:'#7B189F', cls:'wayfair', dark:false },
+  lowes:       { name:"Lowe's",       icon:'🔧', color:'#004990', cls:'lowes', dark:false },
+};
+
+// Activities data
+const ACTIVITIES = [
+  // ===== AMAZON =====
+  { id:'amz1', platform:'amazon', name:'Prime Day 2026', date:'2026-06-23', endDate:'2026-06-26', status:'ongoing', summary:'年度最大会员日大促，覆盖美欧日等18国，Prime会员专享数百万商品折扣。', desc:'亚马逊年度旗舰大促，覆盖美国、英国、德国、日本等18个站点。2026年首次提前至6月，历时4天。卖家需提前备货至FBA仓，活动期间流量为平时5-10倍。', mechanisms:[{t:'会员专属',c:'purple'},{t:'限时秒杀',c:'orange'},{t:'BD/LD',c:''},{t:'Coupon叠加',c:'green'},{t:'品牌引流奖励',c:'cyan'}],
+    steps:'1. 提前30天入仓FBA\n2. 提报Lightning Deal（LD）或Best Deal（BD）\n3. 设置Prime Exclusive Discount\n4. 配置Coupon叠加优惠\n5. 品牌卖家可获"品牌引流奖励"10%返点',
+    target:'Prime会员', url:'https://www.amazon.com/primeday' },
+  { id:'amz2', platform:'amazon', name:'Black Friday / Cyber Monday', date:'2026-11-27', endDate:'2026-11-30', status:'upcoming', summary:'全球最大购物节，线上线下全面爆发，感恩节后连续4天超级大促。', desc:'感恩节后周五至周一（含Cyber Monday），全品类开放。玩具、电子、家居为热门品类。2026年预计GMV突破新纪录。', mechanisms:[{t:'全网大促',c:'orange'},{t:'LD秒杀',c:'orange'},{t:'7-Day Deal',c:''},{t:'Coupon',c:'green'},{t:'Buy One Get One',c:'pink'}],
+    steps:'1. 9月中旬开始LD提报\n2. 10月初FBA入仓截止\n3. 广告预算增至常态3-5倍\n4. 多ASIN组合促销提高客单价\n5. 准备站外引流（社媒+Deal站）',
+    target:'全量消费者', url:'https://www.amazon.com/blackfriday' },
+  { id:'amz3', platform:'amazon', name:'Back to School', date:'2026-07-15', endDate:'2026-08-31', status:'upcoming', summary:'开学季大促，文具/电子/服装/宿舍用品为主，持续整个暑假。', desc:'7月中旬至8月底，美国返校购物季。笔记本电脑、文具、背包、宿舍床品为核心品类。大学生消费力强，客单价高。', mechanisms:[{t:'品类满减',c:'green'},{t:'学生专享',c:'purple'},{t:'Buy Box促销',c:'orange'}],
+    steps:'1. 6月底前完成品类规划\n2. 设置Student Prime折扣\n3. 捆绑销售（电脑+背包+文具）\n4. 社媒KOL推广（TikTok/IG）',
+    target:'学生/家长', url:'https://www.amazon.com/backtoschool' },
+  { id:'amz4', platform:'amazon', name:'Holiday Deals / End of Year', date:'2026-12-01', endDate:'2026-12-24', status:'upcoming', summary:'圣诞季 + 年终清仓，黑五后持续到圣诞前，全年最长促销窗口。', desc:'覆盖整个12月，礼品、玩具、装饰为核心品类。礼品卡销量暴增，最后一分钟配送（Last Minute Deals）成流量引擎。', mechanisms:[{t:'闪电降价',c:'orange'},{t:'礼品卡促销',c:'pink'},{t:'节日限定',c:'purple'}],
+    steps:'1. 11月黑五战绩复盘\n2. 设置Gift Guide专题页\n3. 加大Sponsored Brands投放\n4. 监控库存防断货',
+    target:'圣诞购物者', url:'https://www.amazon.com/holiday' },
+  { id:'amz5', platform:'amazon', name:"Father's Day Gift Guide", date:'2026-06-10', endDate:'2026-06-21', status:'past', summary:'父亲节礼品指南，电子/工具/户外/个护等品类集中推广，Gift Guide专属页面。', desc:'6月10日至父亲节当天（6月21日）。亚马逊每年打造 Father\'s Day Gift Guide 专题页，按"Tech Dad""Grill Master""DIY Dad""Fitness Dad"等人物画像分类推荐。电子产品、工具套装、户外烧烤、男士个护为核心品类。', mechanisms:[{t:'Gift Guide',c:'purple'},{t:'品类折扣',c:'green'},{t:'父亲节Coupon',c:'orange'},{t:'Last Minute Deal',c:'pink'}],
+  steps:'1. 5月中旬入选Gift Guide专题\n2. 设置Father\'s Day专属Coupon\n3. 优化"父亲节礼物"关键词SEO\n4. 捆绑礼品包装提升客单价\n5. 截止日前推Last Minute Deal',
+  target:'送礼子女', url:'https://www.amazon.com/fathersday' },
+
+  // ===== SHEIN =====
+  { id:'she1', platform:'shein', name:'SHEIN 闪购 Flash Sale', date:'2026-06-10', endDate:'2026-12-31', status:'ongoing', summary:'每日限时限量闪购，部分商品低至$1.99，全天候滚动更新。', desc:'Shein核心引流机制，每天多场次滚动上新。利用紧迫感（倒计时+库存条）刺激转化。移动端优先设计，闪购入口在App首页首屏。', mechanisms:[{t:'限时倒计时',c:'orange'},{t:'库存预警',c:'red'},{t:'$1.99专区',c:'green'},{t:'APP专享',c:'purple'}],
+    steps:'1. 选择高转化潜力SKU\n2. 设置阶梯降价（24h/12h/2h）\n3. 配合首页Banner曝光\n4. Push推送闪购提醒\n5. 闪购结束转常态价',
+    target:'价格敏感用户', url:'https://us.shein.com/Flash-Sale-sc-011141246.html' },
+  { id:'she2', platform:'shein', name:'Shein X 设计师联名', date:'2026-03-01', endDate:'2026-12-31', status:'ongoing', summary:'全球独立设计师孵化计划，联名款限量发售，平台包揽设计→生产→营销全链路。', desc:'Shein X计划扶持全球独立设计师，从设计稿到量产仅需7-15天。联名款有独立品牌页，平台给予搜索加权和首页推荐位。', mechanisms:[{t:'限量发售',c:'pink'},{t:'独立品牌页',c:'purple'},{t:'搜索加权',c:'cyan'}],
+    steps:'1. 设计师提交设计稿\n2. Shein审核+打样\n3. 小批量试产测试市场\n4. 数据好→放量生产\n5. 首页/社媒矩阵推广',
+    target:'潮流消费者', url:'https://us.shein.com/sheinx' },
+  { id:'she3', platform:'shein', name:'Season Clearance', date:'2026-06-15', endDate:'2026-07-15', status:'ongoing', summary:'换季清仓，全场最高80% OFF，夏季大促清库存。', desc:'春夏/秋冬两季换季清仓。女装、鞋包、配饰大量降价，适合清库存和测款。常用阶梯折扣：Extra 15%→30%→50% OFF。', mechanisms:[{t:'全场折扣',c:'green'},{t:'阶梯优惠',c:'orange'},{t:'满额包邮',c:'cyan'}],
+    steps:'1. 盘点滞销库存\n2. 分批降价（先30%后50%后70%）\n3. 邮件+App推送清仓专题\n4. 捆绑套餐加速清仓',
+    target:'捡漏用户', url:'https://us.shein.com/' },
+
+  // ===== HOME DEPOT =====
+  { id:'hd1', platform:'homedepot', name:'Spring Black Friday', date:'2026-04-01', endDate:'2026-04-30', status:'past', summary:'春季家居焕新大促，园艺/户外/工具/电器集中放价，全年最重要的家居促销之一。', desc:'4月整月促销，园艺工具、割草机、户外家具、油漆为核心品类。折扣力度20-50%，部分品牌如DEWALT、RYOBI深度参与。线上线下同步。', mechanisms:[{t:'品牌联促',c:'purple'},{t:'分期免息',c:'green'},{t:'以旧换新',c:'cyan'},{t:'Pro会员价',c:'orange'}],
+    steps:'1. 提前60天与品牌谈促销价\n2. 3月中旬上架促销价签\n3. 门店端架+堆头陈列\n4. Pro Xtra会员额外5%返点\n5. 线上Buy Online Pick Up In Store',
+    target:'DIY/园艺爱好者', url:'https://www.homedepot.com/c/spring_black_friday' },
+  { id:'hd2', platform:'homedepot', name:'Memorial Day Sale', date:'2026-05-22', endDate:'2026-05-25', status:'past', summary:'阵亡将士纪念日大促，家电/烧烤/户外家具爆款降价。', desc:'5月底3天小长假促销，主力品类：大型家电（冰箱/洗衣机）、烧烤设备、户外家具、地板材料。折扣叠加制造商返利（Manufacturer Rebate）。', mechanisms:[{t:'制造商返利',c:'pink'},{t:'店长特批价',c:'orange'},{t:'免费安装',c:'green'}],
+    steps:'1. 4月确定促销SKU清单\n2. 申请Manufacturer Rebate额度\n3. 培训店员推荐话术\n4. 线上首页Banner+邮件营销',
+    target:'家庭装修者', url:'https://www.homedepot.com/' },
+  { id:'hd3', platform:'homedepot', name:'Black Friday', date:'2026-11-26', endDate:'2026-11-30', status:'upcoming', summary:'黑五家居大促，工具箱/电器/圣诞装饰集中爆发，部分商品门庭抢购。', desc:'工具套装（DEWALT/Milwaukee等）、智能家居、圣诞装饰品为核心品类。门店凌晨排队文化浓厚，Doorbuster限时超低价引流。', mechanisms:[{t:'Doorbuster限时',c:'orange'},{t:'门庭抢购',c:'red'},{t:'APP提前购',c:'purple'}],
+    steps:'1. 10月确定Doorbuster商品\n2. 提前印刷DM广告册\n3. APP会员提前1天解锁\n4. 门店增加临时收银位',
+    target:'全量消费者', url:'https://www.homedepot.com/c/black_friday' },
+  { id:'hd4', platform:'homedepot', name:"Father's Day Tool & Grill Sale", date:'2026-06-05', endDate:'2026-06-21', status:'past', summary:'父亲节工具/烧烤/户外设备大促，Home Depot全年第二大节日促销，工具套装折扣力度最大。', desc:'6月初至父亲节，是 Home Depot 仅次于圣诞的第二大节日促销窗口。主打品类：电动工具套装(DEWALT/Milwaukee/RYOBI)、烧烤炉(Weber/Traeger)、户外动力设备、智能家居。品牌联合折扣叠加制造商返利，部分工具套装直降$100+。', mechanisms:[{t:'品牌联促',c:'purple'},{t:'制造商返利',c:'pink'},{t:'工具套装特价',c:'orange'},{t:'Gift Center',c:'cyan'},{t:'免费刻字',c:'green'}],
+  steps:'1. 5月中旬确定促销SKU和定价\n2. 设置Father\'s Day Gift Center专题页\n3. 与DEWALT/Weber等品牌谈联合促销\n4. 门店端架集中陈列工具礼品套装\n5. 免费刻字服务提升礼品属性',
+  target:'父亲/DIY爱好者', url:'https://www.homedepot.com/c/fathers_day_gifts' },
+
+  // ===== TEMU =====
+  { id:'tem1', platform:'temu', name:'新人首单免费 / $0.01专区', date:'2026-01-01', endDate:'2026-12-31', status:'ongoing', summary:'TEMU最核心的拉新机制——新用户首单近乎免费，极大降低决策门槛。', desc:'新用户注册即送大额优惠券包，首单可用$0.01购商品。配合"满$10包邮"策略提升客单价。是TEMU用户爆发的核心增长引擎。', mechanisms:[{t:'首单免费',c:'green'},{t:'新人券包',c:'pink'},{t:'$0.01专区',c:'orange'},{t:'满额包邮',c:'cyan'}],
+    steps:'1. 新用户注册自动发放券包\n2. 进入$0.01专区选品\n3. 凑单至包邮门槛\n4. 分享可得额外优惠券\n5. 完成首单后推送"复购券"',
+    target:'新用户', url:'https://www.temu.com/new-user.html' },
+  { id:'tem2', platform:'temu', name:'Lightning Deal 闪电秒杀', date:'2026-06-01', endDate:'2026-12-31', status:'ongoing', summary:'每日多场限时限量秒杀，价格低至$0.99，饥饿营销效果极强。', desc:'滚动式秒杀，每场持续1-2小时。商品库存条实时显示剩余比例，营造紧迫感。首页首屏最大流量位。', mechanisms:[{t:'限时限量',c:'orange'},{t:'库存预警',c:'red'},{t:'预约提醒',c:'purple'}],
+    steps:'1. 商家提报秒杀SKU及库存\n2. 平台审核定价（要求历史最低）\n3. 排期上线\n4. 实时库存监控防超卖\n5. 秒杀结束自动恢复原价',
+    target:'价格敏感用户', url:'https://www.temu.com/lightning-deals.html' },
+  { id:'tem3', platform:'temu', name:'Super Deals / 超级折扣', date:'2026-05-01', endDate:'2026-12-31', status:'ongoing', summary:'全场低至90% OFF的超级折扣专区，通过游戏化抽奖激励复购。', desc:'超级折扣专区集中在App首页第三屏，商品采用"转盘抽折扣"等游戏化机制——用户参与互动后可获得额外折扣券，极大提升停留时长和复购率。', mechanisms:[{t:'游戏化抽奖',c:'pink'},{t:'阶梯折扣',c:'green'},{t:'拼团',c:'purple'},{t:'$99包邮',c:'cyan'}],
+    steps:'1. 用户进入Super Deals专区\n2. 参与转盘/翻牌抽折扣\n3. 获得限时优惠券\n4. 引导凑单至包邮门槛\n5. 下单后推送"再抽一次"',
+    target:'全量用户', url:'https://www.temu.com/super-deals.html' },
+  { id:'tem4', platform:'temu', name:'Price Drop / 最低价保证', date:'2026-01-01', endDate:'2026-12-31', status:'ongoing', summary:'比价机制——用户提交竞品链接，TEMU承诺最低价，否则补差价。', desc:'TEMU核心价格策略。在商品详情页展示"全网最低价"标签，用户可提交竞品URL申请Price Match。通过算法自动调价保持价格优势。', mechanisms:[{t:'Price Match',c:'orange'},{t:'自动调价',c:'cyan'},{t:'最低价标签',c:'green'}],
+    steps:'1. 用户看到"全网最低价"标签\n2. 如发现更低价格可提交链接\n3. TEMU分析竞品价格\n4. 确认后自动调价\n5. 已购用户可退差价',
+    target:'比价用户', url:'https://www.temu.com/' },
+
+  // ===== ALIEXPRESS =====
+  { id:'ali1', platform:'aliexpress', name:'618 Summer Sale 夏季大促', date:'2026-06-12', endDate:'2026-06-25', status:'ongoing', summary:'速卖通年度夏季大促，全场最高80% OFF，品牌+频道、海外直播重磅加持。', desc:'6月12日-25日，覆盖全球200+国家。2026年重点推广"Brand+"频道和海外网红直播矩阵。14国百名KOL同步直播带货，品牌成交同比增长90%。', mechanisms:[{t:'全场满减',c:'green'},{t:'品牌+',c:'purple'},{t:'海外直播',c:'pink'},{t:'新人专享',c:'orange'}],
+    steps:'1. 5月中旬前报名\n2. 加入Brand+频道审核\n3. 报名平台直播排期\n4. 设置跨店满减（$3/$30码等）\n5. 配合社媒引流（TikTok/IG）',
+    target:'全球消费者', url:'https://www.aliexpress.com/' },
+  { id:'ali2', platform:'aliexpress', name:'11.11 全球购物节', date:'2026-11-01', endDate:'2026-11-12', status:'upcoming', summary:'全球最大网购狂欢节，起源于阿里生态，速卖通全球同步，预售+正式期双波峰。', desc:'11月1-10日预售期，11月11-12日正式爆发。全品类参与，折扣力度全年最大。2025年全球GMV突破新高。预售锁库存+全款支付是核心玩法。', mechanisms:[{t:'预售定金膨胀',c:'pink'},{t:'跨店满减',c:'green'},{t:'直播秒杀',c:'orange'},{t:'品牌券',c:'purple'},{t:'物流补贴',c:'cyan'}],
+    steps:'1. 8月开始招商报名\n2. 9月确定货盘和价格\n3. 10月20日预售开启\n4. 11月1日付尾款正式开卖\n5. 11月11-12日全量爆发',
+    target:'全球消费者', url:'https://www.aliexpress.com/' },
+  { id:'ali3', platform:'aliexpress', name:'Back to School 开学季', date:'2026-08-01', endDate:'2026-09-15', status:'upcoming', summary:'8-9月开学季大促，文具/电子/服装为主力品类', desc:'8月至9月中旬，面向全球学生群体。笔记本电脑、平板、文具、书包为主要品类。拉美和东南亚市场表现突出。', mechanisms:[{t:'学生折扣',c:'purple'},{t:'品类满减',c:'green'},{t:'新店扶持',c:'cyan'}],
+    steps:'1. 7月中旬前上架开学相关商品\n2. 设置学生专属Coupon\n3. 捆绑销售提升客单价\n4. 定向投放Facebook学生群体',
+    target:'学生群体', url:'https://www.aliexpress.com/' },
+
+  // ===== WAYFAIR =====
+  { id:'way1', platform:'wayfair', name:'Way Day 2026', date:'2026-04-25', endDate:'2026-04-27', status:'past', summary:'Wayfair年度最大自有IP促销，家具/家居/户外全场最高80% OFF + 全站包邮。', desc:'4月25-27日，3天48小时超长大促。家具、装饰、户外用品为核心品类，全场免运费。APP用户可提前24小时解锁部分折扣。是Wayfair年度流量顶峰，堪比黑五。', mechanisms:[{t:'APP早鸟',c:'purple'},{t:'全场免邮',c:'green'},{t:'阶梯折扣',c:'orange'}],
+    steps:'1. 提前4周准备库存\n2. 提报Way Day促销价\n3. 优化主图和A+内容\n4. 站内广告预算翻倍\n5. APP推送 + 邮件预热',
+    target:'家居消费者', url:'https://www.wayfair.com/daily-sales/way-day' },
+  { id:'way2', platform:'wayfair', name:'Clearance / Open Box', date:'2026-01-01', endDate:'2026-12-31', status:'ongoing', summary:'清仓+开箱商品专区，常年最高70% OFF，退货/展示品集中处理渠道。', desc:'全年持续，涵盖退货商品、展示品、轻微瑕疵品。价格优势明显（30-70% OFF），但库存数量有限且不可预测。是捡漏高价值家具的好机会。', mechanisms:[{t:'开箱特价',c:'orange'},{t:'清仓折扣',c:'green'},{t:'限量供应',c:'red'}],
+    steps:'1. 每日刷新Clearance库存\n2. 加入购物车后尽快结算\n3. Open Box商品标注瑕疵详情\n4. 部分商品不支持退换',
+    target:'捡漏用户', url:'https://www.wayfair.com/clearance/' },
+  { id:'way3', platform:'wayfair', name:'Seasonal Sale / Holiday', date:'2026-11-26', endDate:'2026-12-25', status:'upcoming', summary:'黑五+圣诞家居大促，圣诞装饰/礼品/家具全品类降价。', desc:'覆盖黑五到圣诞节整月，圣诞树、装饰品、礼品家具为核心品类。Wayfair 专业买家团队会提前选定趋势商品并深度备货。', mechanisms:[{t:'黑五专享',c:'orange'},{t:'Gift Guide',c:'purple'},{t:'组合套餐',c:'cyan'}],
+    steps:'1. 10月入选Holiday Gift Guide\n2. 设置黑五专享价\n3. 加大搜索广告投放\n4. 确保节日期间物流时效',
+    target:'圣诞购物者', url:'https://www.wayfair.com/' },
+
+  // ===== LOWE'S =====
+  { id:'low1', platform:'lowes', name:'SpringFest 2026', date:'2026-04-03', endDate:'2026-05-05', status:'past', summary:'Lowe\'s春季园艺/家居焕新大促，覆盖园艺、油漆、户外、电器全品类。', desc:'4月初至5月初，主打春季园艺（Mulch/土壤/花卉/种子）、户外电动工具、油漆涂料、大型家电。Mulch低至$2/袋引流，带动高客单价园艺设备销售。', mechanisms:[{t:'引流爆款',c:'orange'},{t:'品牌叠加',c:'purple'},{t:'MyLowe\'s会员',c:'green'},{t:'包安装',c:'cyan'}],
+    steps:'1. 确定$2 Mulch等引流爆款\n2. 品牌商联合促销（DEWALT/Whirlpool等）\n3. MyLowe\'s会员免费送货\n4. 门店园艺区集中陈列\n5. 线上Click & Collect',
+    target:'园艺爱好者', url:'https://www.lowes.com/l/savings/springfest' },
+  { id:'low2', platform:'lowes', name:'Memorial Day Sale', date:'2026-05-22', endDate:'2026-05-25', status:'past', summary:'大型家电/烧烤/户外设备大促，与Home Depot正面竞争。', desc:'5月底3天促销，主力品类：大型家电（冰箱/洗衣机/烤箱）、烧烤架、户外动力设备。Lowe\'s常用"买电器满$XXX返$XX礼品卡"策略。', mechanisms:[{t:'满额返卡',c:'pink'},{t:'分期免息',c:'green'},{t:'低价保证',c:'orange'}],
+    steps:'1. 提前30天确定促销价\n2. 申请Manufacturer Rebate\n3. 店员推荐搭配销售\n4. Lowes.com首页大Banner',
+    target:'家庭装修者', url:'https://www.lowes.com/' },
+  { id:'low3', platform:'lowes', name:'Black Friday / Cyber Monday', date:'2026-11-26', endDate:'2026-12-01', status:'upcoming', summary:'全年力度最大促销，工具套装/电器/圣诞装饰全线降价。', desc:'Lowe\'s黑五以工具套装和电器为流量入口，圣诞装饰品为利润品类。常用"限量抢购"策略制造到店紧迫感。线上Cyber Monday延续黑五折扣。', mechanisms:[{t:'限量抢购',c:'orange'},{t:'线上专享',c:'cyan'},{t:'Pro会员',c:'purple'}],
+    steps:'1. 10月确定黑五货盘\n2. 提前印制DM宣传册\n3. 门店凌晨开门+排队管理\n4. APP提前购（提前2天）\n5. Cyber Monday线上加推',
+    target:'全量消费者', url:'https://www.lowes.com/' },
+  { id:'low4', platform:'lowes', name:'Labor Day Sale', date:'2026-09-04', endDate:'2026-09-07', status:'upcoming', summary:'劳工节大促，电器/地板/油漆/工具为主力品类。', desc:'9月初3天小长假，与Home Depot直接竞争。油漆、地板材料、大型家电、户外工具全面降价。常用"免费送货+基础安装"作为增值卖点。', mechanisms:[{t:'免费送货',c:'green'},{t:'免费安装',c:'cyan'},{t:'清仓特卖',c:'orange'}],
+    steps:'1. 8月中旬确定促销方案\n2. 与品牌商协调返利\n3. 门店设置"New Lower Price"价签\n4. 邮件推送会员专享价',
+    target:'DIY装修者', url:'https://www.lowes.com/' },
+  { id:'low5', platform:'lowes', name:"Father's Day Gift Sale", date:'2026-06-05', endDate:'2026-06-21', status:'past', summary:'父亲节礼品大促，工具/烧烤/户外/智能家居为主，与Home Depot正面争夺父亲节市场。', desc:'6月初至父亲节，Lowe\'s 主打"Dad deserves the best tools"概念。核心品类：电动工具套装、户外烧烤设备、智能门锁/门铃、园艺设备。与 Home Depot 高度竞争，常用"买工具套装送配件"策略。', mechanisms:[{t:'买套装送配件',c:'pink'},{t:'限时特价',c:'orange'},{t:'MyLowe\'s会员',c:'green'},{t:'Gift Guide',c:'purple'}],
+  steps:'1. 5月下旬上架父亲节礼盒套装\n2. 设置Father\'s Day Gift Guide\n3. MyLowe\'s会员专享额外折扣\n4. 买工具套装赠送配件包\n5. 线上Buy Online + 门店快速取货',
+  target:'父亲/DIY爱好者', url:'https://www.lowes.com/l/fathers-day-gifts' },
+
+  // ===== ALL PLATFORMS =====
+  { id:'all1', platform:'amazon', name:'Prime Early Access / 秋季大促', date:'2026-10-06', endDate:'2026-10-07', status:'upcoming', summary:'亚马逊第二场Prime级大促（秋季Prime Day），为黑五预热。', desc:'10月第二周的Prime秋季大促，2022年首次推出后成为年度固定节目。主要面向Prime会员，品类覆盖秋季热销品：服装、家居、电子。', mechanisms:[{t:'Prime专享',c:'purple'},{t:'提前黑五',c:'orange'}],
+    steps:'1. 9月中旬提报\n2. 设置Prime Exclusive Discount\n3. 广告预算日常1.5-2倍',
+    target:'Prime会员', url:'https://www.amazon.com/' },
+  { id:'all2', platform:'aliexpress', name:'328 周年庆', date:'2026-03-28', endDate:'2026-04-01', status:'past', summary:'速卖通年初大促，平台周年庆，全品类参与。', desc:'3月28日速卖通周年庆，为期5天。与春节后补货需求重叠，大服饰/3C/家居为核心品类。全年第一个重要促销节点。', mechanisms:[{t:'周年特价',c:'pink'},{t:'满减优惠',c:'green'}],
+    steps:'1. 3月初报名\n2. 设置平台优惠券\n3. 配合社媒营销',
+    target:'全球消费者', url:'https://www.aliexpress.com/' },
+];
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTHS_WITH_DATA = [1,3,4,5,6,7,8,9,10,11,12];
+
+// ========== STATE ==========
+let activePlatform = 'all';
+let activeStatus = 'all';
+let activeMonth = null;
+let keyword = '';
+const el = id => document.getElementById(id);
+
+// ========== UTILS ==========
+function getStatus(act) {
+  const now = new Date();
+  const s = new Date(act.date);
+  const e = act.endDate ? new Date(act.endDate) : null;
+  if (now < s) return 'upcoming';
+  if (e && now > new Date(e.getTime() + 86400000)) return 'past';
+  if (!e && (now - s) > 7*86400000) return 'past';
+  return 'ongoing';
+}
+function formatDate(d) { const dt=new Date(d+'T00:00:00'); return `${MONTHS[dt.getMonth()]}${dt.getDate()}日`; }
+function getMonth(d) { return new Date(d+'T00:00:00').getMonth() + 1; }
+function empty(main) { main.innerHTML = '<div class="empty">没有匹配的活动，试试换一个平台或状态筛选。<br>当前共 <b>'+ACTIVITIES.length+'</b> 条活动记录。</div>'; }
+
+// ========== RENDER ==========
+function renderStats() {
+  const now = new Date();
+  let ongoing=0, upcoming=0, past=0;
+  ACTIVITIES.forEach(a=>{
+    const st = getStatus(a);
+    if(st==='ongoing') ongoing++;
+    else if(st==='upcoming') upcoming++;
+    else past++;
+  });
+  el('statsRow').innerHTML = `
+    <div class="stat-item"><div class="val">${ACTIVITIES.length}</div><div class="lbl">收录活动</div></div>
+    <div class="stat-item"><div class="val">${ongoing}</div><div class="lbl">🔥 进行中</div></div>
+    <div class="stat-item"><div class="val">${upcoming}</div><div class="lbl">⏳ 即将开始</div></div>
+    <div class="stat-item"><div class="val">${Object.keys(PLATFORMS).length}</div><div class="lbl">覆盖平台</div></div>
+  `;
+}
+
+function renderTimeline() {
+  const monthsWithOngoing = []; const monthsWithUpcoming = [];
+  ACTIVITIES.forEach(a=>{
+    const st = getStatus(a); const m = getMonth(a.date);
+    if(st==='ongoing' && !monthsWithOngoing.includes(m)) monthsWithOngoing.push(m);
+    if(st==='upcoming' && !monthsWithUpcoming.includes(m)) monthsWithUpcoming.push(m);
+  });
+  let html = '';
+  MONTHS.forEach((m,i)=>{
+    const mn = i+1;
+    let cls = 'timeline-month';
+    if(activeMonth === mn) cls += ' active';
+    if(monthsWithOngoing.includes(mn)) cls += ' has-ongoing';
+    else if(MONTHS_WITH_DATA.includes(mn)) cls += ' has-activity';
+    html += `<div class="${cls}" data-month="${mn}">${m}</div>`;
+  });
+  el('timelineInner').innerHTML = html;
+  document.querySelectorAll('.timeline-month').forEach(el=>{
+    el.onclick = ()=>{
+      activeMonth = activeMonth===parseInt(el.dataset.month) ? null : parseInt(el.dataset.month);
+      renderTimeline();
+      renderMain();
+    };
+  });
+}
+
+function renderRegionTabs() {
+  let html = `<div class="region-tab ${activePlatform==='all'?'active':''}" data-platform="all" title="全部">🌍</div>`;
+  Object.entries(PLATFORMS).forEach(([k,v])=>{
+    html += `<div class="region-tab ${activePlatform===k?'active':''}" data-platform="${k}" title="${v.name}">${v.icon}</div>`;
+  });
+  el('regionTabs').innerHTML = html;
+  document.querySelectorAll('.region-tab').forEach(tab=>{
+    tab.onclick = ()=>{
+      activePlatform = tab.dataset.platform;
+      renderRegionTabs();
+      renderMain();
+    };
+  });
+}
+
+function renderMain() {
+  const kw = keyword.trim().toLowerCase();
+  let list = ACTIVITIES.map(a=>({...a, _status:getStatus(a)}));
+
+  if(activePlatform!=='all') list = list.filter(a=>a.platform===activePlatform);
+  if(activeStatus!=='all') list = list.filter(a=>a._status===activeStatus);
+  if(activeMonth) list = list.filter(a=>getMonth(a.date)===activeMonth);
+  if(kw) list = list.filter(a=>
+    a.name.toLowerCase().includes(kw) ||
+    a.summary.toLowerCase().includes(kw) ||
+    (PLATFORMS[a.platform]&&PLATFORMS[a.platform].name.toLowerCase().includes(kw)) ||
+    a.mechanisms.some(m=>m.t.toLowerCase().includes(kw)) ||
+    a.desc.toLowerCase().includes(kw) ||
+    a.target.toLowerCase().includes(kw)
+  );
+
+  const main = el('main');
+  if(list.length===0) return empty(main);
+
+  main.innerHTML = list.map(a=>{
+    const pf = PLATFORMS[a.platform];
+    const st = a._status;
+    const stLabel = st==='ongoing'?'进行中':st==='upcoming'?'即将开始':'已结束';
+    const dateText = a.endDate ? `${formatDate(a.date)} — ${formatDate(a.endDate)}` : formatDate(a.date);
+
+    return `<div class="card ${pf.cls}">
+      <div class="card-head">
+        <div class="card-avatar" style="background:${pf.color};color:${pf.dark?'#111':'#fff'}">${pf.icon}</div>
+        <div>
+          <div class="card-title">${a.name}</div>
+          <div class="card-subtitle">${pf.name}</div>
+        </div>
+        <div class="status-tag ${st}"><span class="status-dot"></span>${stLabel}</div>
+      </div>
+      <div class="card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${dateText}</div>
+      <div class="card-desc">${a.summary}</div>
+      <div class="card-mechanisms">${a.mechanisms.map(m=>`<span class="mech-tag ${m.c||''}">${m.t}</span>`).join('')}</div>
+      <div class="card-steps">
+        <strong>📋 玩法机制</strong>
+        <ol>${a.steps.split('\n').filter(s=>s.trim()).map(s=>`<li>${s.replace(/^\d+\.\s*/,'')}</li>`).join('')}</ol>
+      </div>
+      <div class="card-foot">
+        <a href="${a.url}" target="_blank" rel="noopener noreferrer">前往活动页 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <span class="card-target">🎯 ${a.target}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ========== FILTER HANDLERS ==========
+el('search').oninput = function(){ keyword=this.value; renderMain(); };
+
+document.querySelectorAll('.chip').forEach(c=>{
+  c.onclick = function(){
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    activeStatus = this.dataset.status;
+    // When selecting a status, reset month
+    if(activeStatus!=='all'){ activeMonth=null; renderTimeline(); }
+    renderMain();
+  };
+});
+
+// ========== INIT ==========
+renderStats();
+renderTimeline();
+renderRegionTabs();
+renderMain();
+
+// Click card to open detail modal
+el('main').addEventListener('click', function(e){
+  const card = e.target.closest('.card');
+  if(!card) return;
+  if(e.target.closest('a')) return; // don't intercept link clicks
+});
+</script>
+</body>
+</html>
