@@ -20,8 +20,7 @@ const SITES = [
   { id: 'shein',      name: 'Shein',       url: 'https://us.shein.com/' },
   { id: 'homedepot',  name: 'Home Depot',  url: 'https://www.homedepot.com/' },
   { id: 'temu',       name: 'Temu',        url: 'https://www.temu.com/' },
-  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true,
-    proxyUrl: 'https://translate.google.com/translate?hl=en&sl=en&u=https://www.aliexpress.com/' },
+  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/?gatewayAdapt=glo2usa', thumOpts: '400' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
   { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
 ];
@@ -47,10 +46,9 @@ const saveResults = (data) => {
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ============ 截图下载 ============
-const thumUrl = (siteUrl, opts) => {
-  const base = `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}`;
-  const extra = opts ? `/${opts}` : '';
-  return `${base}${extra}/${siteUrl}`;
+const thumUrl = (siteUrl, cropHeight) => {
+  const height = cropHeight || SHOT_HEIGHT;
+  return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${height}/${siteUrl}`;
 };
 
 async function downloadScreenshot(siteUrl, siteId, opts) {

@@ -351,7 +351,7 @@ const SITES = [
   { name:'Shein',       url:'https://us.shein.com/',           color:'#000000', dark:false, loc:'us.shein.com' },
   { name:'Home Depot',  url:'https://www.homedepot.com/',      color:'#F96302', dark:false, loc:'homedepot.com' },
   { name:'Temu',        url:'https://www.temu.com/',           color:'#FB7701', dark:false, loc:'temu.com' },
-  { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com', htmlMode:true },
+  { name:'AliExpress',  url:'https://www.aliexpress.com/?gatewayAdapt=glo2usa', color:'#E62E04', dark:false, loc:'aliexpress.com' },
   { name:"Lowe's",      url:'https://www.lowes.com/',          color:'#004990', dark:false, loc:'lowes.com' },
   { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true, capHint:'Wayfair 启用 Press & Hold 人机验证，当前免费云方案无法自动绕过' },
 ];
@@ -445,12 +445,13 @@ function makeThumb(img){
 }
 
 // ============ 截图获取 ============
-function thumUrl(siteUrl){
-  return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}/${siteUrl}`;
+function thumUrl(siteUrl, cropHeight){
+  const h = cropHeight || SHOT_HEIGHT;
+  return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${h}/${siteUrl}`;
 }
 
-async function fetchScreenshot(siteUrl){
-  const tUrl = thumUrl(siteUrl);
+async function fetchScreenshot(siteUrl, cropHeight){
+  const tUrl = thumUrl(siteUrl, cropHeight);
   const proxies = [
     tUrl,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,
@@ -602,7 +603,7 @@ async function checkSite(site){
       }
     }else{
       // 普通模式: 截图对比
-      const { img } = await fetchScreenshot(site.url);
+      const { img } = await fetchScreenshot(site.url, site.cropHeight);
       hash = computeHash(img);
       thumb = makeThumb(img);
     }
@@ -816,7 +817,8 @@ function renderCards(){
     let shotContent = '';
     if(cloudMode && (status === 'normal' || status === 'baseline') && !site.htmlMode){
       // 云端模式：使用 thum.io 生成实时截图预览
-      const thumUrl = `https://image.thum.io/get/width/400/crop/300/${encodeURIComponent(site.url)}`;
+      const previewH = site.cropHeight || 300;
+      const thumUrl = `https://image.thum.io/get/width/400/crop/${previewH}/${encodeURIComponent(site.url)}`;
       shotContent = `<img src="${thumUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:100%;height:100%;object-fit:cover">
         <div class="placeholder" style="display:none"><div>📐</div><div>截图加载中...</div></div>`;
       if(s.status === 'changed'){
@@ -864,7 +866,7 @@ function renderCards(){
           </div>
           <div class="foot-actions" onclick="event.stopPropagation()">
             ${site.htmlMode ? `<a class="foot-btn" href="https://web.archive.org/web/20260627035940if_/${site.url}" target="_blank" title="通过Wayback Machine查看存档">📦 存档页</a><a class="foot-btn" href="${site.url}" target="_blank" title="直接访问${site.name}">🌐 实况</a>` : ''}
-            ${site.htmlMode ? '' : (s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url)}" target="_blank">查看实时</a>` : '')}
+            ${site.htmlMode ? '' : (s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url, site.cropHeight)}" target="_blank">查看实时</a>` : '')}
             ${s.oldThumb ? `<a class="foot-btn compare" onclick="openCompare('${site.name}', ${s.lastCheck})">对比</a>` : ''}
           </div>
         </div>
