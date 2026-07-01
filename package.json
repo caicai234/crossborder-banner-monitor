@@ -1,11 +1,14 @@
 {
   "name": "banner-monitor",
-  "version": "1.0.0",
-  "description": "跨境平台 Banner 后台监控 + 前端面板",
+  "version": "2.0.0",
+  "description": "跨境平台 Banner 图片级监控 + 前端面板",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node check-once.js"
+    "check": "node check-banners.js",
+    "check:legacy": "node check-once-cloud.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
 }

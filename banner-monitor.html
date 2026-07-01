@@ -770,7 +770,7 @@ function renderHistory(){
     <div class="history-item" onclick="openCompare('${h.site}', ${h.ts})">
       <div class="hi-time">${formatTime(h.ts)}</div>
       <div class="hi-site" style="border-left:3px solid ${h.color}">${h.site}</div>
-      <div class="hi-desc">Banner 发生变化，差异度 <b>${h.dist}</b> / 256</div>
+      <div class="hi-desc">${h.detail || 'Banner 发生变化，差异度 ' + h.dist + ' / 256'}</div>
       <div class="hi-arrow">→</div>
     </div>
   `).join('');
@@ -782,7 +782,22 @@ function openCompare(siteName, ts){
   if(!h) return;
 
   document.getElementById('modalTitle').textContent = `${h.site} Banner 变化对比 — ${formatTime(h.ts)}`;
-  document.getElementById('modalBody').innerHTML = `
+  document.getElementById('modalBody').innerHTML = h.detail ? `
+    <div style="width:100%;padding:20px;text-align:center">
+      <div style="font-size:16px;color:#e2e8f0;margin-bottom:12px">${h.site} Banner 图片集变化</div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:16px">
+        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:16px 24px">
+          <div style="font-size:28px;font-weight:700;color:#f87171">${h.detail.match(/新增(\d+)张/)?.[1] || 0}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:4px">新增图片</div>
+        </div>
+        <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:16px 24px">
+          <div style="font-size:28px;font-weight:700;color:#f87171">${h.detail.match(/移除(\d+)张/)?.[1] || 0}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:4px">移除图片</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#64748b">检测方式: 图片级监控 (${h.method || 'images'})</div>
+    </div>
+  ` : `
     <div class="compare-col">
       <h4>变化前 <span class="tag-old">OLD</span></h4>
       ${h.oldThumb ? `<img class="compare-img" src="${h.oldThumb}">` : '<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:#374151">无旧截图</div>'}
@@ -815,7 +830,28 @@ function renderCards(){
     const txtColor = site.dark ? '#1a1f36' : '#fff';
 
     let shotContent = '';
-    if(cloudMode && (status === 'normal' || status === 'baseline') && !site.htmlMode){
+    const method = s.method || (site.htmlMode ? 'manual' : 'screenshot');
+
+    if(method === 'images' && s.banners && s.banners.length > 0){
+      // 图片级监控：显示提取的 banner 图片缩略图
+      const thumbs = s.banners.slice(0, 4).map(b => `
+        <div style="position:relative;flex:1;min-width:0;overflow:hidden;border-radius:4px;background:#111827">
+          <img src="${b.url}" style="width:100%;height:100%;object-fit:cover;display:block" 
+               onerror="this.style.display='none';this.parentNode.style.display='none'">
+        </div>`).join('');
+      shotContent = `
+        <div style="position:relative;width:100%;height:100%;background:#0f172a;padding:6px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;gap:4px;flex:1;min-height:0">
+            ${thumbs}
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+            <span style="font-size:11px;color:#4ade80;font-weight:600">🖼️ ${s.banners.length} 张Banner图片</span>
+            <span style="font-size:10px;color:#64748b">${s.banners[0]?.w || ''}×${s.banners[0]?.h || ''}</span>
+          </div>
+        </div>
+        ${status==='changed' ? '<div class="changed-tag">CHANGED</div>' : ''}
+      `;
+    }else if(cloudMode && (status === 'normal' || status === 'baseline') && !site.htmlMode){
       // 云端模式：使用 thum.io 生成实时截图预览
       const previewH = site.cropHeight || 300;
       const thumUrl = `https://image.thum.io/get/width/400/crop/${previewH}/${encodeURIComponent(site.url)}`;
@@ -843,8 +879,10 @@ function renderCards(){
       shotContent = `<div class="placeholder"><div>📐</div><div>点击「立即检测」获取截图</div></div>`;
     }
 
-    const distInfo = s.lastDist != null && s.lastDist > 0 ? `差异度 ${s.lastDist}` : '';
-    const errMsg = s.errorMsg ? `错误: ${s.errorMsg}` : '';
+    const distInfo = s.changeDetail
+      ? `新增${s.changeDetail.added}张 移除${s.changeDetail.removed}张`
+      : (s.lastDist != null && s.lastDist > 0 ? `差异度 ${s.lastDist}` : '');
+    const errMsg = s.lastError ? `错误: ${s.lastError}` : '';
 
     return `
       <div class="card ${status}" onclick="window.open('${site.url}','_blank')">
@@ -857,6 +895,7 @@ function renderCards(){
             </div>
           </div>
           <div class="status-badge ${status}"><span class="sd"></span>${statusText}</div>
+          ${method === 'images' ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(74,222,128,.12);color:#4ade80;font-weight:600">图片级</span>' : method === 'manual' ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(100,116,139,.15);color:#94a3b8;font-weight:600">手动</span>' : ''}
         </div>
         <div class="shot-wrap">${shotContent}</div>
         <div class="card-foot">
@@ -865,8 +904,9 @@ function renderCards(){
             ${s.changes ? `变化次数: <b>${s.changes}</b>` : ''} ${distInfo} ${errMsg}
           </div>
           <div class="foot-actions" onclick="event.stopPropagation()">
+            ${method === 'images' && s.banners && s.banners.length > 0 ? `<a class="foot-btn" href="${s.banners[0].url}" target="_blank" title="查看首张Banner图片">🖼️ Banner图</a>` : ''}
             ${site.htmlMode ? `<a class="foot-btn" href="https://web.archive.org/web/20260627035940if_/${site.url}" target="_blank" title="通过Wayback Machine查看存档">📦 存档页</a><a class="foot-btn" href="${site.url}" target="_blank" title="直接访问${site.name}">🌐 实况</a>` : ''}
-            ${site.htmlMode ? '' : (s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url, site.cropHeight)}" target="_blank">查看实时</a>` : '')}
+            ${site.htmlMode ? '' : (method !== 'images' && s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url, site.cropHeight)}" target="_blank">查看实时</a>` : '')}
             ${s.oldThumb ? `<a class="foot-btn compare" onclick="openCompare('${site.name}', ${s.lastCheck})">对比</a>` : ''}
           </div>
         </div>
@@ -1093,6 +1133,11 @@ function syncCloudToState(cloudData){
       ...existing,
       status: c.status || 'normal',
       hash: c.hash,
+      method: c.method || 'screenshot',
+      banners: c.banners || [],
+      bannerCount: c.bannerCount || 0,
+      preview: c.preview || null,
+      changeDetail: c.changeDetail || null,
       lastCheck: c.lastCheck,
       lastDist: c.lastDist,
       changes: c.changes || 0,
@@ -1107,6 +1152,8 @@ function syncCloudToState(cloudData){
       color: (SITES.find(s => s.name === (h.siteName || h.site)) || {}).color || '#888',
       ts: h.time,
       dist: h.dist,
+      detail: h.detail || null,
+      method: h.method || null,
       oldHash: h.oldHash,
       newHash: h.newHash,
     }));

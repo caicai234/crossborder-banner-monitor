@@ -26,8 +26,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 运行 Banner 检测
-        run: node check-once-cloud.js
+      - name: 安装依赖
+        run: npm install
+
+      - name: 安装 Playwright 浏览器
+        run: npx playwright install --with-deps chromium
+
+      - name: 运行 Banner 图片级检测
+        run: node check-banners.js
         env:
           TZ: Asia/Shanghai
 
@@ -39,15 +45,11 @@ jobs:
           # 检查 results.json 是否有变化
           if [ -f "monitor-server/data/results.json" ]; then
             git add monitor-server/data/results.json
-            # 如果截图目录有文件也加入
-            if [ -d "monitor-server/data/screenshots" ]; then
-              git add monitor-server/data/screenshots/
-            fi
 
             if git diff --cached --quiet; then
               echo "📊 无数据变化，跳过推送"
             else
-              git commit -m "📊 Banner 监控数据更新 [$(date '+%Y-%m-%d %H:%M') CST]"
+              git commit -m "📊 Banner 监控数据更新 [$(date '+%Y-%m-%d %H:%M')] CST"
               git push origin main
               echo "✅ 数据已推送到仓库"
             fi
