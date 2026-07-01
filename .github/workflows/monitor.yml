@@ -2,9 +2,8 @@ name: Banner Daily Monitor
 
 on:
   schedule:
-    # 每天北京时间凌晨 2:00 和下午 2:00 各检测一次
-    - cron: '0 18 * * *'   # UTC 18:00 = 北京时间凌晨 2:00
-    - cron: '0 6 * * *'    # UTC 06:00 = 北京时间下午 2:00
+    # 每 12 小时检测一次（北京时间早 8:00 / 晚 20:00）
+    - cron: '0 */12 * * *'  # UTC 00:00 / 12:00 = 北京时间 08:00 / 20:00
   workflow_dispatch:       # 允许手动触发
 
 permissions:
