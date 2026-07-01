@@ -20,7 +20,8 @@ const SITES = [
   { id: 'shein',      name: 'Shein',       url: 'https://us.shein.com/' },
   { id: 'homedepot',  name: 'Home Depot',  url: 'https://www.homedepot.com/' },
   { id: 'temu',       name: 'Temu',        url: 'https://www.temu.com/' },
-  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/' },
+  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/',
+    thumOpts: 'userAgent/Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F125.0.0.0%20Safari%2F537.36/wait/3000' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
   { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
 ];
@@ -46,11 +47,14 @@ const saveResults = (data) => {
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ============ 截图下载 ============
-const thumUrl = (siteUrl) =>
-  `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}/${siteUrl}`;
+const thumUrl = (siteUrl, opts) => {
+  const base = `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}`;
+  const extra = opts ? `/${opts}` : '';
+  return `${base}${extra}/${siteUrl}`;
+};
 
-async function downloadScreenshot(siteUrl, siteId) {
-  const url = thumUrl(siteUrl);
+async function downloadScreenshot(siteUrl, siteId, opts) {
+  const url = thumUrl(siteUrl, opts);
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -142,7 +146,7 @@ async function checkSite(site, data) {
       }
     } else {
       // 正常平台：下载截图 + 计算哈希
-      const buffer = await downloadScreenshot(site.url, site.id);
+      const buffer = await downloadScreenshot(site.url, site.id, site.thumOpts);
       hash = computeImageHash(buffer);
     }
 
