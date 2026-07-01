@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * check-banners.js — Banner 图片级监控（Playwright + thum.io 降级）
+ * check-banners.js — 头图 Banner 图片级监控（Playwright + thum.io 降级）
  *
  * 核心思路：
- * 1. 用 Playwright 打开网站，提取页面中的 banner/hero 图片 URL
+ * 1. 用 Playwright 打开网站，提取页面首屏头图/hero banner 图片 URL
  * 2. 下载每张图片，计算 SHA-256 哈希
  * 3. 对比上次运行的图片哈希集合，检测变化
  * 4. 如果 Playwright 被拦截，降级为 thum.io 截图 + 感知哈希
  *
- * 优势：比截图更精准，只检测实际 banner 图片变化，不受页面布局微调影响
+ * 优势：只检测首页头图，不受页面下方促销图、分类图等噪声干扰
  */
 
 let chromium;
@@ -105,7 +105,10 @@ async function extractBannerImages(page, pageUrl) {
       const rect = img.getBoundingClientRect();
       const w = img.naturalWidth || rect.width || 0;
       const h = img.naturalHeight || rect.height || 0;
-      if (w < 300) return;
+      if (w < 600) return; // 头图banner 通常很大
+      // 只关注首屏顶部区域 (top < 1000)
+      const scrollTop = Math.round(rect.top + window.scrollY);
+      if (scrollTop > 1000) return;
       results.push({
         src,
         w: Math.round(w),
@@ -114,7 +117,7 @@ async function extractBannerImages(page, pageUrl) {
         cls: (img.className || '').toString(),
         parentCls: (img.parentElement?.className || '').toString(),
         alt: img.alt || '',
-        top: Math.round(rect.top + window.scrollY),
+        top: scrollTop,
       });
     });
 
@@ -129,7 +132,9 @@ async function extractBannerImages(page, pageUrl) {
         if (!src || src.startsWith('data:')) continue;
         const rect = el.getBoundingClientRect();
         const w = rect.width;
-        if (w < 300) continue;
+        if (w < 600) continue;
+        const bgTop = Math.round(rect.top + window.scrollY);
+        if (bgTop > 1000) continue;
         results.push({
           src,
           w: Math.round(w),
@@ -138,12 +143,12 @@ async function extractBannerImages(page, pageUrl) {
           cls: (el.className || '').toString(),
           parentCls: '',
           alt: '',
-          top: Math.round(rect.top + window.scrollY),
+          top: bgTop,
         });
       }
     });
 
-    // 3. 提取 srcset 中的大图
+    // 3. 提取 srcset 中的大图（仅头图区域）
     document.querySelectorAll('img[srcset], source[srcset]').forEach(el => {
       const srcset = el.srcset || el.getAttribute('srcset') || '';
       if (!srcset) return;
@@ -151,6 +156,8 @@ async function extractBannerImages(page, pageUrl) {
       const last = parts[parts.length - 1].trim().split(/\s+/)[0];
       if (last) {
         const rect = el.getBoundingClientRect();
+        const sTop = Math.round(rect.top + window.scrollY);
+        if (sTop > 1000) return;
         results.push({
           src: last,
           w: Math.round(rect.width || 800),
@@ -159,7 +166,7 @@ async function extractBannerImages(page, pageUrl) {
           cls: (el.className || '').toString(),
           parentCls: '',
           alt: el.alt || '',
-          top: Math.round(rect.top + window.scrollY),
+          top: sTop,
         });
       }
     });
@@ -181,41 +188,46 @@ function scoreAndFilter(images) {
     let score = 0;
     const ratio = img.w / (img.h || 1);
 
-    // 尺寸评分
-    if (img.w >= 800) score += 3;
-    if (img.w >= 1200) score += 2;
-    // Banner 状宽高比
-    if (ratio >= 2 && ratio <= 6) score += 4;
-    else if (ratio >= 1.5 && ratio < 2) score += 2;
-    // 大面积图片
-    if (img.w * (img.h || 1) > 200000) score += 2;
+    // 尺寸评分 — 头图通常全宽
+    if (img.w >= 1200) score += 5;
+    else if (img.w >= 800) score += 3;
 
-    // 位置评分（页面顶部 = 更可能是 banner）
-    if (img.top < 800) score += 3;
-    if (img.top < 400) score += 2;
+    // 横幅宽高比 (2:1 ~ 5:1 最典型)
+    if (ratio >= 2 && ratio <= 5) score += 5;
+    else if (ratio >= 1.5 && ratio < 2) score += 2;
+
+    // 位置评分 — 头图一定在页面最顶部
+    if (img.top < 200) score += 6;
+    else if (img.top < 400) score += 4;
+    else if (img.top < 600) score += 2;
+    else score -= 3; // 超过 600px 不太可能是头图
 
     // class/alt 关键词评分
     const text = ((img.cls || '') + ' ' + (img.parentCls || '') + ' ' + (img.alt || '')).toLowerCase();
-    if (text.includes('banner') || text.includes('hero')) score += 6;
-    if (text.includes('carousel') || text.includes('swiper') || text.includes('slide')) score += 5;
-    if (text.includes('promo') || text.includes('deal') || text.includes('sale')) score += 4;
+    if (text.includes('hero') || text.includes('banner')) score += 8;
+    if (text.includes('carousel') || text.includes('swiper') || text.includes('slide')) score += 6;
+    if (text.includes('promo') || text.includes('deal')) score += 3;
     if (text.includes('main') || text.includes('featured') || text.includes('spotlight')) score += 3;
-    if (text.includes('marketing') || text.includes('campaign') || text.includes('category')) score += 2;
 
-    // 排除明显非 banner 的
-    if (text.includes('avatar') || text.includes('icon') || text.includes('logo') && img.w < 500) score -= 5;
-    if (text.includes('thumbnail') || text.includes('product-image')) score -= 2;
+    // 排除项 — 强惩罚
+    if (text.includes('avatar') || text.includes('icon') && img.w < 500) score -= 8;
+    if (text.includes('thumbnail') || text.includes('product-image')) score -= 6;
+    if (text.includes('logo') && img.w < 500) score -= 8;
+    if (text.includes('footer') || text.includes('breadcrumb')) score -= 8;
 
     return { ...img, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
 
-  // 取评分最高的 8 张，且至少需要评分 > 0
-  const filtered = scored.filter(s => s.score > 0).slice(0, 8);
+  // 头图通常是一组轮播图 (1~3张)，取评分 >= 4 的前 3 张
+  const filtered = scored.filter(s => s.score >= 4).slice(0, 3);
 
-  // 如果没有评分 > 0 的，取最前面的 5 张
-  if (filtered.length === 0) return scored.slice(0, 5);
+  // 降级：如果没有高分图，取评分 > 0 的前 2 张
+  if (filtered.length === 0) {
+    const fallback = scored.filter(s => s.score > 0).slice(0, 2);
+    return fallback;
+  }
 
   return filtered;
 }
@@ -253,15 +265,15 @@ async function checkSiteWithPlaywright(site, context) {
 
     // 提取 banner 图片
     const rawImages = await extractBannerImages(page, site.url);
-    log(`  📸 ${site.name}: 提取到 ${rawImages.length} 张候选图片`);
+    log(`  📸 ${site.name}: 提取到 ${rawImages.length} 张候选头图`);
 
     if (rawImages.length === 0) {
-      throw new Error('未找到任何候选图片');
+      throw new Error('未找到任何头图');
     }
 
     // 评分筛选
     const banners = scoreAndFilter(rawImages);
-    log(`  🎯 ${site.name}: 筛选后 ${banners.length} 张 banner 图片`);
+    log(`  🎯 ${site.name}: 筛选后 ${banners.length} 张头图`);
 
     if (banners.length === 0) {
       throw new Error('筛选后无 banner 图片');
@@ -386,7 +398,7 @@ async function checkSite(site, data, context) {
   // 方案1: Playwright 图片提取
   try {
     result = await checkSiteWithPlaywright(site, context);
-    log(`  🖼️ ${site.name}: Playwright 图片提取成功 (${result.banners.length} 张banner)`);
+    log(`  🖼️ ${site.name}: 头图提取成功 (${result.banners.length} 张)`);
   } catch (e) {
     log(`  ⚠️ ${site.name} Playwright 失败: ${e.message}, 降级 thum.io...`);
     usedFallback = true;
@@ -461,7 +473,7 @@ async function checkSite(site, data, context) {
       newHash: String(result.hash).slice(0, 16) + '...',
     });
     if (data.history.length > 50) data.history = data.history.slice(0, 50);
-    log(`  🔔 ${site.name} BANNER 变化！${detail}`);
+    log(`  🔔 ${site.name} 头图变化！${detail}`);
   }
 
   log(`  ✅ ${site.name}: ${status}${changed ? ' [CHANGED!]' : ''} (${result.method})`);

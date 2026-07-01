@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>跨境平台 Banner 监控系统</title>
+<title>跨境平台头图监控系统</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{
@@ -245,8 +245,8 @@
 
 <div class="hero">
   <div class="hero-left">
-    <h1>📡 跨境平台 Banner 监控系统</h1>
-    <p>实时监控 Amazon / Shein / Home Depot / Temu / AliExpress / Wayfair / Lowe's 首页 Banner 变化</p>
+    <h1>📡 跨境平台头图监控系统</h1>
+    <p>实时监控 Amazon / Shein / Home Depot / Temu / AliExpress / Wayfair / Lowe's 首页头图 Banner 变化</p>
   </div>
   <div class="hero-right">
     <div class="live-dot stopped" id="liveDot" onclick="toggleMonitor()">
@@ -305,7 +305,7 @@
     <span class="count" id="historyCount">0</span>
   </div>
   <div class="history-list" id="historyList">
-    <div class="empty-history">暂无变化记录。启动监控后，当检测到 Banner 变化时会记录在此。</div>
+    <div class="empty-history">暂无变化记录。启动监控后，当检测到头图变化时会记录在此。</div>
   </div>
 </section>
 
@@ -693,7 +693,7 @@ function notify(siteName, dist){
   // 浏览器通知
   if('Notification' in window && Notification.permission === 'granted'){
     try{
-      new Notification(`🔔 ${siteName} Banner 变化！`, {
+      new Notification(`🔔 ${siteName} 头图变化！`, {
         body: `检测到首页 Banner 发生变化（差异度: ${dist}），点击查看详情。`,
         icon: 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="%23ef4444"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`),
         tag: siteName,
@@ -701,7 +701,7 @@ function notify(siteName, dist){
     }catch(e){}
   }
   // Toast
-  showToast('alert', `🔔 ${siteName} Banner 变化！`, `首页 Banner 已更新，差异度 ${dist}。点击卡片查看对比。`);
+  showToast('alert', `🔔 ${siteName} 头图变化！`, `首页头图已更新。点击卡片查看对比。`);
 }
 
 function showToast(type, title, msg){
@@ -762,7 +762,7 @@ function renderHistory(){
   count.textContent = state.history.length;
 
   if(state.history.length === 0){
-    el.innerHTML = '<div class="empty-history">暂无变化记录。启动监控后，当检测到 Banner 变化时会记录在此。</div>';
+    el.innerHTML = '<div class="empty-history">暂无变化记录。启动监控后，当检测到头图变化时会记录在此。</div>';
     return;
   }
 
@@ -781,7 +781,7 @@ function openCompare(siteName, ts){
   const h = state.history.find(x=>x.site===siteName && x.ts===ts);
   if(!h) return;
 
-  document.getElementById('modalTitle').textContent = `${h.site} Banner 变化对比 — ${formatTime(h.ts)}`;
+  document.getElementById('modalTitle').textContent = `${h.site} 头图变化对比 — ${formatTime(h.ts)}`;
   document.getElementById('modalBody').innerHTML = h.detail ? `
     <div style="width:100%;padding:20px;text-align:center">
       <div style="font-size:16px;color:#e2e8f0;margin-bottom:12px">${h.site} Banner 图片集变化</div>
