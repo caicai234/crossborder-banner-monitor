@@ -116,7 +116,8 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .ms b{font-size:13px}
 .ms .changed{color:#f87171}
 .ms .ok{color:var(--green)}
-.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;padding:18px 28px}
+.ms.freq b{color:var(--accent);cursor:help}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;padding:18px 28px}
 .monitor-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.3s}
 .monitor-card:hover{border-color:rgba(79,110,247,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .monitor-card.changed{border-color:rgba(239,68,68,.4);animation:flashRed 1s ease-in-out 3}
@@ -145,6 +146,13 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .monitor-shot img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
 .monitor-shot .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;flex-direction:column;gap:6px}
 .monitor-shot .loading-overlay{position:absolute;inset:0;background:rgba(5,8,16,.7);display:flex;align-items:center;justify-content:center}
+/* 横幅模式 — 图片级头图横排展示 */
+.monitor-shot.banner-mode{background:var(--card2);display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px}
+.monitor-shot.banner-mode .banner-img-wrap{min-height:0;border-radius:6px;overflow:hidden;position:relative;background:#050810}
+.monitor-shot.banner-mode .banner-img-wrap img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.monitor-shot.banner-mode .banner-img-wrap.single{flex:1}
+.monitor-shot.banner-mode .banner-label{position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.monitor-shot.banner-mode .banner-count{position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(34,197,94,.15);color:var(--green);backdrop-filter:blur(4px)}
 .monitor-spinner{width:28px;height:28px;border:3px solid rgba(79,110,247,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .monitor-card-foot{padding:8px 14px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -362,6 +370,10 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
       立即检测
     </button>
     <button class="monitor-btn monitor-btn-danger" onclick="monClearChanges()">清除变化</button>
+    <button class="monitor-btn" style="background:var(--accent);color:#fff;border:none" onclick="monRefreshLive()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      同步实时数据
+    </button>
     <div class="monitor-select-wrap">
       间隔<select id="monInterval" onchange="monChangeInterval()">
         <option value="60">1小时</option><option value="360">6小时</option>
@@ -374,6 +386,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
       <div class="ms">监控 <b id="monStatTotal">7</b></div>
       <div class="ms">正常 <b class="ok" id="monStatOk">0</b></div>
       <div class="ms">变化 <b class="changed" id="monStatChanged">0</b></div>
+      <div class="ms freq">⏱ 频率 <b>每12小时</b></div>
     </div>
   </div>
   <div class="monitor-grid" id="monitorGrid"></div>
@@ -606,10 +619,24 @@ function monBlobToImg(b){return new Promise((res,rej)=>{const u=URL.createObject
 function monHash(img){const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,16,16);const d=ctx.getImageData(0,0,16,16).data,g=[];for(let i=0;i<d.length;i+=4)g.push(.299*d[i]+.587*d[i+1]+.114*d[i+2]);const a=g.reduce((a,b)=>a+b,0)/g.length;let h='';for(let i=0;i<g.length;i++)h+=g[i]>a?'1':'0';return h}
 function monHamming(h1,h2){if(!h1||!h2||h1.length!==h2.length)return 999;let d=0;for(let i=0;i<h1.length;i++)if(h1[i]!==h2[i])d++;return d}
 function monMakeThumb(img){const c=document.createElement('canvas');c.width=320;c.height=240;c.getContext('2d').drawImage(img,0,0,320,240);return c.toDataURL('image/jpeg',.6)}
-function monThumUrl(u,h){return`https://image.thum.io/get/width/${MON_SHOT_W}/crop/${h||MON_SHOT_H}/${u}`}
+function monThumUrl(u,h,cb){
+  let target=u;
+  if(cb){
+    const sep=u.includes('?')?'&':'?';
+    target=`${u}${sep}nocache=${cb}`;
+  }
+  return `https://image.thum.io/get/width/${MON_SHOT_W}/crop/${h||MON_SHOT_H}/${target}`
+}
+function monLiveThumb(site,w,h){
+  const cb=Math.floor(Date.now()/(1000*60*15)); // 15分钟缓存刷新
+  const sep=site.url.includes('?')?'&':'?';
+  const target=`${site.url}${sep}nocache=${cb}`;
+  return `https://image.thum.io/get/width/${w||400}/crop/${h||300}/${encodeURIComponent(target)}`;
+}
 
 async function monFetchShot(url,cropH){
-  const tUrl=monThumUrl(url,cropH);const proxies=[tUrl,`https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,`https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`];
+  const cb=Math.floor(Date.now()/(1000*60*15));
+  const tUrl=monThumUrl(url,cropH,cb);const proxies=[tUrl,`https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,`https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`];
   for(let i=0;i<proxies.length;i++){try{const r=await monFetch(proxies[i],45000);if(!r.ok)continue;const b=await r.blob();if(!b.type.startsWith('image/')&&b.size<500)continue;const img=await monBlobToImg(b);if(img.naturalWidth<50)continue;return{img,blob:b,source:i}}catch(e){}}
   throw new Error('所有截图方式均失败');
 }
@@ -651,10 +678,58 @@ function monRenderHistory(){
   el.innerHTML=monState.history.map(h=>`<div class="monitor-history-item" onclick="monOpenCompare('${h.site}',${h.ts})"><div class="mhi-time">${monFmtTime(h.ts)}</div><div class="mhi-site" style="border-left:3px solid ${h.color}">${h.site}</div><div class="mhi-desc">${h.detail||'头图变化，差异度 '+h.dist+' / 256'}</div><div class="mhi-arrow">→</div></div>`).join('')
 }
 
+function monOpenLatestCompare(n){
+  const latest=monState.history.filter(x=>x.site===n).sort((a,b)=>b.ts-a.ts)[0];
+  if(!latest)return;
+  monOpenCompare(n,latest.ts)
+}
+function monOpenCurrentBanners(n){
+  const site=MON_SITES.find(s=>s.name===n);if(!site)return;
+  const s=monState.sites[n];if(!s||!s.banners||s.banners.length===0)return;
+  document.getElementById('monModalTitle').textContent=`${n} 当前头图 · ${s.bannerCount||s.banners.length}张`;
+  const renderList=list=>list.map(b=>`<div style="border-radius:8px;overflow:hidden;background:#050810;border:1px solid var(--line)"><img src="${b.url}" style="width:100%;display:block;aspect-ratio:${b.w}/${b.h};object-fit:contain" onerror="this.style.display='none'"><div style="padding:4px 8px;font-size:10px;color:var(--muted);word-break:break-all">${b.url.split('/').pop()?.split('?')[0]?.slice(0,35)||'banner'} · ${b.w}×${b.h}</div></div>`).join('');
+  document.getElementById('monModalBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${renderList(s.banners)}
+    </div>`;
+  document.getElementById('monModal').classList.add('show')
+}
 function monOpenCompare(n,ts){
   const h=monState.history.find(x=>x.site===n&&x.ts===ts);if(!h)return;
   document.getElementById('monModalTitle').textContent=`${h.site} 头图变化对比 — ${monFmtTime(h.ts)}`;
-  document.getElementById('monModalBody').innerHTML=h.detail?`<div style="grid-column:1/-1;text-align:center;padding:20px"><div style="font-size:15px;margin-bottom:12px">${h.site} Banner 图片集变化</div><div style="display:flex;gap:14px;justify-content:center"><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/新增(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">新增图片</div></div><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/移除(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">移除图片</div></div></div></div>`:`<div class="compare-col"><h4>变化前 <span class="compare-tag old">OLD</span></h4>${h.oldThumb?`<img class="compare-img" src="${h.oldThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无旧截图</div>'}</div><div class="compare-col"><h4>变化后 <span class="compare-tag new">NEW</span></h4>${h.newThumb?`<img class="compare-img" src="${h.newThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无新截图</div>'}<div class="compare-info">差异度 <b>${h.dist} / 256</b></div></div>`;
+
+  // 图片级对比 — 展示旧/新 banner 并排
+  if(h.method==='images'&&h.oldBanners&&h.newBanners){
+    const oldSet=new Set((h.oldBanners||[]).map(b=>b.hash));
+    const newSet=new Set((h.newBanners||[]).map(b=>b.hash));
+    const addedBanners=(h.newBanners||[]).filter(b=>!oldSet.has(b.hash));
+    const removedBanners=(h.oldBanners||[]).filter(b=>!newSet.has(b.hash));
+    const unchangedBanners=(h.newBanners||[]).filter(b=>oldSet.has(b.hash));
+
+    const renderBannerList=(title,tag,list,color)=>{
+      if(list.length===0)return`<div style="grid-column:span 1"><h4 style="font-size:12px;font-weight:600;margin-bottom:8px">${title} <span style="font-size:10px;padding:2px 7px;border-radius:5px;background:${color}15;color:${color}">${tag}</span></h4><div style="color:var(--muted);font-size:12px;padding:20px;text-align:center">无变化</div></div>`;
+      return`<div style="grid-column:span 1"><h4 style="font-size:12px;font-weight:600;margin-bottom:8px">${title} <span style="font-size:10px;padding:2px 7px;border-radius:5px;background:${color}15;color:${color}">${tag}</span><span style="font-size:11px;color:var(--muted);margin-left:6px">${list.length}张</span></h4>${list.map(b=>`<div style="border-radius:8px;overflow:hidden;margin-bottom:8px;background:#050810;border:2px solid ${color}30"><img src="${b.url}" style="width:100%;display:block;aspect-ratio:${b.w}/${b.h};object-fit:contain" onerror="this.style.display='none'"><div style="padding:4px 8px;font-size:10px;color:var(--muted);word-break:break-all">${b.url.split('/').pop()?.split('?')[0]?.slice(0,35)||'banner'} · ${b.w}×${b.h}</div></div>`).join('')}</div>`;
+    };
+
+    const renderUnchanged=(list)=>{
+      if(list.length===0)return'';
+      return`<div style="grid-column:1/-1;margin-top:12px"><h4 style="font-size:12px;font-weight:600;margin-bottom:8px">✅ 未变化 <span style="font-size:11px;color:var(--muted);margin-left:6px">${list.length}张</span></h4><div style="display:flex;gap:8px;flex-wrap:wrap">${list.map(b=>`<div style="width:120px;border-radius:6px;overflow:hidden;background:#050810;border:1px solid var(--line)"><img src="${b.url}" style="width:100%;display:block;aspect-ratio:${b.w}/${b.h};object-fit:contain" onerror="this.style.display='none'"></div>`).join('')}</div></div>`;
+    };
+
+    document.getElementById('monModalBody').innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${renderBannerList('❌ 已移除','OLD',removedBanners,'#f87171')}
+        ${renderBannerList('🆕 新增','NEW',addedBanners,'#4ade80')}
+      </div>
+      ${renderUnchanged(unchangedBanners)}
+      <div style="grid-column:1/-1;text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)">
+        ${h.detail||''} · 变化前 ${(h.oldBanners||[]).length}张 → 变化后 ${(h.newBanners||[]).length}张
+      </div>`;
+
+  // 截图级对比 — 展示旧/新截图
+  }else{
+    document.getElementById('monModalBody').innerHTML=h.detail?`<div style="grid-column:1/-1;text-align:center;padding:20px"><div style="font-size:15px;margin-bottom:12px">${h.site} Banner 图片集变化</div><div style="display:flex;gap:14px;justify-content:center"><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/新增(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">新增图片</div></div><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/移除(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">移除图片</div></div></div></div>`:`<div class="compare-col"><h4>变化前 <span class="compare-tag old">OLD</span></h4>${h.oldThumb?`<img class="compare-img" src="${h.oldThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无旧截图</div>'}</div><div class="compare-col"><h4>变化后 <span class="compare-tag new">NEW</span></h4>${h.newThumb?`<img class="compare-img" src="${h.newThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无新截图</div>'}<div class="compare-info">差异度 <b>${h.dist} / 256</b></div></div>`;
+  }
   document.getElementById('monModal').classList.add('show')
 }
 function monCloseModal(e){if(e&&e.target!==document.getElementById('monModal'))return;document.getElementById('monModal').classList.remove('show')}
@@ -666,16 +741,25 @@ function monRenderCards(){
     const txtColor=site.dark?'#1a1f36':'#fff',method=s.method||(site.htmlMode?'manual':'screenshot');
     let sc='';
     if(method==='images'&&s.banners&&s.banners.length>0){
-      sc=`<div style="display:flex;gap:3px;height:100%;padding:4px">${s.banners.slice(0,4).map(b=>`<div style="flex:1;overflow:hidden;border-radius:3px"><img src="${b.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.remove()"></div>`).join('')}</div><div style="position:absolute;bottom:4px;left:4px;font-size:10px;color:var(--green);font-weight:600">🖼 ${s.banners.length}张</div>`;
+      // 横幅模式 — 头图横排展示
+      const bnrs=s.banners.slice(0,3);
+      const bannerHtml=bnrs.map((b,i)=>{
+        const label=b.url.split('/').pop()?.split('?')[0]?.slice(0,30)||`头图${i+1}`;
+        const ratio=b.w&&b.h?`aspect-ratio:${b.w}/${b.h};`:'';
+        return`<div class="banner-img-wrap${bnrs.length===1?' single':''}" style="${ratio}"><img src="${b.url}" alt="${label}" onerror="this.parentNode.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:60px;color:var(--muted);font-size:10px>加载失败</div>'"><div class="banner-label">${label}</div></div>`;
+      }).join('');
+      sc=`${bannerHtml}<div class="banner-count">头图 ×${s.banners.length}</div>`;
     }else if(monCloudMode&&(status==='normal'||status==='baseline')&&!site.htmlMode){
-      sc=`<img src="https://image.thum.io/get/width/400/crop/300/${encodeURIComponent(site.url)}">`;
+      sc=`<img src="${monLiveThumb(site,400,300)}">`;
     }else if(site.htmlMode){
       sc=`<div class="placeholder"><div style="font-size:24px">🔗</div><div style="color:var(--ink);font-weight:600;font-size:12px">需手动检查</div><div style="font-size:10px;color:var(--muted);max-width:200px">${site.capHint||site.name+' 屏蔽自动化截图'}</div></div>`;
     }else if(status==='checking'){sc=`${s.thumb?`<img src="${s.thumb}" style="opacity:.3">`:''}<div class="loading-overlay"><div class="monitor-spinner"></div></div>`}
     else if(s.thumb){sc=`<img src="${s.thumb}">`}
     else{sc=`<div class="placeholder"><div>📐</div><div>点击检测获取截图</div></div>`}
     const distInfo=s.changeDetail?`新增${s.changeDetail.added}张 移除${s.changeDetail.removed}张`:(s.lastDist!=null&&s.lastDist>0?`差异度 ${s.lastDist}`:'');
-    return`<div class="monitor-card ${status}" onclick="window.open('${site.url}','_blank')"><div class="monitor-card-head"><div class="monitor-card-head-l"><div class="monitor-site-icon" style="background:${site.color};color:${txtColor}">${monInitials(site.name)}</div><div><div class="monitor-site-name">${site.name}</div><div class="monitor-site-url">${site.loc}</div></div></div><div class="monitor-status ${status}"><span class="sd"></span>${stText}</div>${method==='images'?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(74,222,128,.1);color:var(--green)">图片级</span>':''}</div><div class="monitor-shot">${sc}</div><div class="monitor-card-foot"><div class="monitor-foot-info">${s.lastCheck?`上次: <b>${monFmtTime(s.lastCheck)}</b>`:'未检测'} ${s.changes?`· 变化 <b>${s.changes}</b>次`:''} ${distInfo}</div><div class="monitor-foot-actions" onclick="event.stopPropagation()">${!site.htmlMode&&method!=='images'&&s.thumb?`<a class="monitor-foot-btn" href="${monThumUrl(site.url,site.cropHeight)}" target="_blank">实时截图</a>`:''}${s.oldThumb?`<a class="monitor-foot-btn" onclick="monOpenCompare('${site.name}',${s.lastCheck})">对比</a>`:''}</div></div></div>`;
+    const isBannerMode=method==='images'&&s.banners&&s.banners.length>0;
+    const hasChanges=s.changes&&s.changes>0;
+  return`<div class="monitor-card ${status}" onclick="window.open('${site.url}','_blank')"><div class="monitor-card-head"><div class="monitor-card-head-l"><div class="monitor-site-icon" style="background:${site.color};color:${txtColor}">${monInitials(site.name)}</div><div><div class="monitor-site-name">${site.name}</div><div class="monitor-site-url">${site.loc}</div></div></div><div class="monitor-status ${status}"><span class="sd"></span>${stText}</div>${isBannerMode?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(74,222,128,.1);color:var(--green)">图片级</span>':''}</div><div class="monitor-shot${isBannerMode?' banner-mode':''}">${sc}</div><div class="monitor-card-foot"><div class="monitor-foot-info">${s.lastCheck?`上次: <b>${monFmtTime(s.lastCheck)}</b>`:'未检测'} ${s.changes?`· 变化 <b>${s.changes}</b>次`:''} ${distInfo}</div><div class="monitor-foot-actions" onclick="event.stopPropagation()">${isBannerMode?`<a class="monitor-foot-btn" onclick="monOpenCurrentBanners('${site.name}')" style="color:var(--accent)">查看头图</a>`:''}${hasChanges?`<a class="monitor-foot-btn" onclick="monOpenLatestCompare('${site.name}')" style="color:#f59e0b">历史对比</a>`:''}${!site.htmlMode&&method!=='images'?`<a class="monitor-foot-btn" href="${monThumUrl(site.url,site.cropHeight,Math.floor(Date.now()/(1000*60*15)))}" target="_blank">实时截图</a>`:''}</div></div></div>`;
   }).join('')
 }
 
@@ -730,8 +814,24 @@ async function monFetchCloud(){
 function monSyncCloud(data){
   if(!data||!data.sites)return;const ids={amazon:'amazon',shein:'shein',homedepot:'homedepot',temu:'temu',aliexpress:'aliexpress',lowes:'lowes',wayfair:'wayfair'};
   MON_SITES.forEach(s=>{const id=ids[s.name.toLowerCase().replace(/[^a-z]/g,'')];const c=data.sites[id];if(!c)return;const ex=monState.sites[s.name]||{};monState.sites[s.name]={...ex,status:c.status||'normal',hash:c.hash,method:c.method||'screenshot',banners:c.banners||[],bannerCount:c.bannerCount||0,preview:c.preview||null,changeDetail:c.changeDetail||null,lastCheck:c.lastCheck,lastDist:c.lastDist,changes:c.changes||0,errorCount:c.errorCount||0}});
-  if(data.history&&data.history.length){monState.history=data.history.map(h=>({site:h.siteName||h.site,color:(MON_SITES.find(s=>s.name===(h.siteName||h.site))||{}).color||'#888',ts:h.time,dist:h.dist,detail:h.detail||null,method:h.method||null}));document.getElementById('monHistoryCount').textContent=monState.history.length}
-  monState.lastCheck=data.lastCheck
+  if(data.history&&data.history.length){monState.history=data.history.map(h=>({site:h.siteName||h.site,color:(MON_SITES.find(s=>s.name===(h.siteName||h.site))||{}).color||'#888',ts:h.time,dist:h.dist,detail:h.detail||null,method:h.method||null,oldBanners:h.oldBanners||[],newBanners:h.newBanners||[]}));document.getElementById('monHistoryCount').textContent=monState.history.length}
+  monState.lastCheck=data.lastCheck;
+  monRenderHistory()
+}
+
+async function monRefreshLive(){
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='⏳ 同步中...';
+  try{
+    const d=await monFetchCloud();
+    if(d){monSyncCloud(d);monRenderCards();monUpdateStats();
+      document.getElementById('monitorLive').className='monitor-live running';document.getElementById('monitorLiveText').textContent='☁️ 云端运行中';
+      document.getElementById('cloudIndicator').innerHTML='<div class="cloud-dot online"></div><span>云端在线</span>';
+      btn.textContent='✅ 已同步';setTimeout(()=>{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>同步实时数据'},3000);
+    }else{
+      btn.textContent='❌ 无响应';setTimeout(()=>{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>同步实时数据'},3000);
+    }
+  }catch(e){btn.textContent='❌ 失败';setTimeout(()=>{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>同步实时数据'},3000)}
 }
 
 async function monInit(){

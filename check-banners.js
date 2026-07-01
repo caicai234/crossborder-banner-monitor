@@ -37,10 +37,15 @@ const SITES = [
   { id: 'shein',      name: 'Shein',       url: 'https://us.shein.com/' },
   { id: 'homedepot',  name: 'Home Depot',  url: 'https://www.homedepot.com/' },
   { id: 'temu',       name: 'Temu',        url: 'https://www.temu.com/' },
-  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/' },
+  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/?gatewayAdapt=glo2usa' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
   { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/' },
 ];
+
+// Playwright 图片提取无法正确识别的站点，强制使用截图模式
+// AliExpress: JS 渲染导致 Playwright 抓到错误图片
+// Temu: JS 重度渲染 + 反爬导致 Playwright 提取为空
+const SCREENSHOT_ONLY_SITES = new Set(['aliexpress', 'temu']);
 
 // ============ 工具 ============
 const log = (msg) => {
@@ -202,6 +207,16 @@ function scoreAndFilter(images) {
     else if (img.top < 600) score += 2;
     else score -= 3; // 超过 600px 不太可能是头图
 
+    // 排除方形/竖图 — 头图一定是横幅 (w 明显 > h)
+    if (ratio < 1.5) score -= 10;
+    if (img.h > img.w) score -= 15;
+    if (ratio > 5 && ratio < 8) score -= 2; // 过长条广告图也不常见
+
+    // URL 模式排除 — 常见商品图尺寸
+    const urlLower = (img.src || '').toLowerCase();
+    if (/_\d+x\d+\./.test(urlLower) && urlLower.includes('960x960')) score -= 12;
+    if (/\/(\d+x\d+\/)?/.test(urlLower) && (urlLower.includes('300x300') || urlLower.includes('150x150') || urlLower.includes('100x100'))) score -= 10;
+
     // class/alt 关键词评分
     const text = ((img.cls || '') + ' ' + (img.parentCls || '') + ' ' + (img.alt || '')).toLowerCase();
     if (text.includes('hero') || text.includes('banner')) score += 8;
@@ -262,6 +277,26 @@ async function checkSiteWithPlaywright(site, context) {
 
     // 等待动态内容加载
     await sleep(4000);
+
+    // 检测反爬虫/验证页
+    const pageText = await page.evaluate(() => {
+      const t = (document.body?.innerText || document.title || '').toLowerCase();
+      return t;
+    });
+    const botSignals = [
+      'unusual traffic',
+      'please slide',
+      'press & hold',
+      'captcha',
+      'access denied',
+      'verify you are human',
+      'robot',
+      'denied',
+    ];
+    const detectedBot = botSignals.some(s => pageText.includes(s));
+    if (detectedBot) {
+      throw new Error(`检测到反爬虫验证页 (${botSignals.find(s => pageText.includes(s))})`);
+    }
 
     // 提取 banner 图片
     const rawImages = await extractBannerImages(page, site.url);
@@ -329,6 +364,12 @@ const thumUrl = (siteUrl) => {
   return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}/${siteUrl}`;
 };
 
+const thumUrlProxy = (siteUrl) => {
+  // 通过 Google Translate 代理绕过 AliExpress 等反爬
+  const encoded = encodeURIComponent(siteUrl);
+  return `https://image.thum.io/get/width/${SHOT_WIDTH}/crop/${SHOT_HEIGHT}/https://translate.google.com/translate?hl=en&sl=en&u=${encoded}`;
+};
+
 function computeImageHash(buffer) {
   const sampleSize = 256;
   const step = Math.max(1, Math.floor(buffer.length / sampleSize));
@@ -354,8 +395,8 @@ function hammingDistance(h1, h2) {
   return d;
 }
 
-async function checkSiteWithThumio(site) {
-  const url = thumUrl(site.url);
+async function checkSiteWithThumio(site, useProxy = false) {
+  const url = useProxy ? thumUrlProxy(site.url) : thumUrl(site.url);
   const res = await fetch(url, { signal: AbortSignal.timeout(90000) });
   if (!res.ok) throw new Error(`thum.io HTTP ${res.status}`);
   const buffer = Buffer.from(await res.arrayBuffer());
@@ -395,14 +436,24 @@ async function checkSite(site, data, context) {
   let result;
   let usedFallback = false;
 
-  // 方案1: Playwright 图片提取
-  try {
-    result = await checkSiteWithPlaywright(site, context);
-    log(`  🖼️ ${site.name}: 头图提取成功 (${result.banners.length} 张)`);
-  } catch (e) {
-    log(`  ⚠️ ${site.name} Playwright 失败: ${e.message}, 降级 thum.io...`);
-    usedFallback = true;
+  const isScreenshotOnly = SCREENSHOT_ONLY_SITES.has(site.id);
 
+  if (!isScreenshotOnly) {
+    // 方案1: Playwright 图片提取
+    try {
+      result = await checkSiteWithPlaywright(site, context);
+      log(`  🖼️ ${site.name}: 头图提取成功 (${result.banners.length} 张)`);
+    } catch (e) {
+      log(`  ⚠️ ${site.name} Playwright 失败: ${e.message}, 降级 thum.io...`);
+      result = null; // 标记失败，走截图降级
+    }
+  } else {
+    log(`  📸 ${site.name}: 跳过 Playwright（截图模式专用站点）`);
+    result = null;
+  }
+
+  if (!result) {
+    usedFallback = true;
     // 方案2: thum.io 截图降级
     try {
       result = await checkSiteWithThumio(site);
@@ -471,6 +522,8 @@ async function checkSite(site, data, context) {
       detail,
       oldHash: prev.hash ? String(prev.hash).slice(0, 16) + '...' : 'none',
       newHash: String(result.hash).slice(0, 16) + '...',
+      oldBanners: (prev.banners || []).map(b => ({ url: b.url, hash: b.hash, w: b.w, h: b.h })),
+      newBanners: (result.banners || []).map(b => ({ url: b.url, hash: b.hash, w: b.w, h: b.h })),
     });
     if (data.history.length > 50) data.history = data.history.slice(0, 50);
     log(`  🔔 ${site.name} 头图变化！${detail}`);

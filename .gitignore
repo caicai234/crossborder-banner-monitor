@@ -5,6 +5,15 @@ node_modules/
 monitor-server/data/screenshots/*.jpg
 monitor-server/data/screenshots/*.png
 
+# Deploy dist
+dist/
+
+# Temp test screenshots
+ae_*.png
+
+# WorkBuddy local memory
+.workbuddy/
+
 # OS files
 .DS_Store
 Thumbs.db
