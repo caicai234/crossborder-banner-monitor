@@ -348,7 +348,7 @@ const SITES = [
   { name:'Shein',       url:'https://us.shein.com/',           color:'#000000', dark:false, loc:'us.shein.com' },
   { name:'Home Depot',  url:'https://www.homedepot.com/',      color:'#F96302', dark:false, loc:'homedepot.com' },
   { name:'Temu',        url:'https://www.temu.com/',           color:'#FB7701', dark:false, loc:'temu.com' },
-  { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com' },
+  { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com', htmlMode:true },
   { name:"Lowe's",      url:'https://www.lowes.com/',          color:'#004990', dark:false, loc:'lowes.com' },
   { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true },
 ];
@@ -823,7 +823,7 @@ function renderCards(){
       shotContent = `<div class="placeholder">
         <div style="font-size:28px;margin-bottom:4px">🔗</div>
         <div style="color:#e2e8f0;font-weight:600;font-size:13px">需手动检查</div>
-        <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;max-width:220px">Wayfair 屏蔽自动化截图，<br>请通过下方按钮手动查看对比</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;max-width:220px">${site.name} 屏蔽自动化截图，<br>请通过下方按钮手动查看对比</div>
       </div>`;
     }else if(status === 'checking'){
       shotContent = `
@@ -860,7 +860,7 @@ function renderCards(){
             ${s.changes ? `变化次数: <b>${s.changes}</b>` : ''} ${distInfo} ${errMsg}
           </div>
           <div class="foot-actions" onclick="event.stopPropagation()">
-            ${site.htmlMode ? `<a class="foot-btn" href="https://web.archive.org/web/20260627035940if_/${site.url}" target="_blank" title="通过Wayback Machine查看存档">📦 存档页</a><a class="foot-btn" href="${site.url}" target="_blank" title="直接访问Wayfair">🌐 实况</a>` : ''}
+            ${site.htmlMode ? `<a class="foot-btn" href="https://web.archive.org/web/20260627035940if_/${site.url}" target="_blank" title="通过Wayback Machine查看存档">📦 存档页</a><a class="foot-btn" href="${site.url}" target="_blank" title="直接访问${site.name}">🌐 实况</a>` : ''}
             ${site.htmlMode ? '' : (s.thumb ? `<a class="foot-btn" href="${thumUrl(site.url)}" target="_blank">查看实时</a>` : '')}
             ${s.oldThumb ? `<a class="foot-btn compare" onclick="openCompare('${site.name}', ${s.lastCheck})">对比</a>` : ''}
           </div>
