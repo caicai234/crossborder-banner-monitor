@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境通 · 全球电商运营中心</title>
+<style>
+/* ===== 全局变量 & 基础 ===== */
+:root{
+  --bg:#080c18;--card:#0d1225;--card2:#11172e;--line:rgba(255,255,255,.06);
+  --ink:#e2e8f0;--muted:#64748b;--accent:#4f6ef7;--accent2:#a855f7;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 20% 0%,rgba(79,110,247,.06) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 100%,rgba(168,85,247,.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+
+/* ===== 顶部导航 ===== */
+.navbar{position:sticky;top:0;z-index:1000;background:rgba(8,12,24,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1400px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:24px}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.5px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.nav-logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f6ef7,#a855f7);display:grid;place-items:center;color:#fff;font-size:17px;font-weight:800;box-shadow:0 4px 16px rgba(79,110,247,.35)}
+.nav-logo span{background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-tabs{display:flex;gap:6px;flex:1}
+.nav-tab{padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:1px solid transparent;transition:all .2s;white-space:nowrap;background:transparent;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.nav-tab.active{background:linear-gradient(135deg,rgba(79,110,247,.18),rgba(168,85,247,.12));color:#fff;border-color:rgba(79,110,247,.3)}
+.nav-tab .tab-icon{font-size:16px}
+.nav-badge{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:700;background:rgba(79,110,247,.2);color:#60a5fa}
+.cloud-indicator{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.cloud-dot{width:7px;height:7px;border-radius:50%}
+.cloud-dot.online{background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 1.5s infinite}
+.cloud-dot.offline{background:var(--muted)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ===== 内容区域 ===== */
+.tab-content{display:none;position:relative;z-index:1}
+.tab-content.active{display:block}
+
+/* ===== Tab 1: 平台导航 (深色主题适配) ===== */
+.nav-hero{text-align:center;padding:44px 20px 28px}
+.nav-hero h1{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+.nav-hero h1 em{font-style:normal;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-hero p{font-size:14px;color:var(--muted);max-width:600px;margin:0 auto;line-height:1.6}
+.nav-search{max-width:480px;margin:0 auto;position:relative}
+.nav-search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);width:17px;height:17px}
+#platformSearch{width:100%;padding:11px 16px 11px 42px;border:1.5px solid var(--line);border-radius:12px;font-size:14px;outline:none;background:var(--card);color:var(--ink);transition:border .2s,box-shadow .2s}
+#platformSearch:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(79,110,247,.12)}
+.nav-stats{display:flex;gap:16px;justify-content:center;margin-top:18px;font-size:12px;color:var(--muted)}
+.nav-stats b{color:var(--ink)}
+.nav-filters{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px 28px;position:sticky;top:68px;z-index:90;background:rgba(8,12,24,.88);backdrop-filter:blur(12px)}
+.nav-chip{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;color:var(--muted);border:1.5px solid var(--line);background:var(--card);transition:all .2s}
+.nav-chip:hover{border-color:rgba(79,110,247,.4);color:#60a5fa}
+.nav-chip.active{background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(79,110,247,.32)}
+.nav-chip-fav{background:rgba(239,68,68,.08)!important;border-color:rgba(239,68,68,.25)!important;color:#f87171!important}
+.nav-chip-fav.active{background:linear-gradient(135deg,#ef4444,#dc2626)!important;color:#fff!important}
+#platformMain{max-width:1400px;margin:0 auto;padding:0 24px 80px}
+.plat-section{margin-bottom:36px}
+.plat-section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--line)}
+.plat-section-tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(79,110,247,.12);color:#60a5fa}
+.plat-section h2{font-size:17px;font-weight:800}
+.plat-section .qty{font-size:12px;color:var(--muted);margin-left:auto}
+.plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.plat-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:all .22s;text-decoration:none;color:inherit;position:relative;overflow:hidden}
+.plat-card:hover{border-color:rgba(79,110,247,.25);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.plat-card-top{display:flex;align-items:center;gap:10px}
+.plat-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:16px;font-weight:800;flex-shrink:0}
+.plat-card h3{font-size:14px;font-weight:700;line-height:1.2}
+.plat-loc{font-size:11px;color:var(--muted);margin-top:1px}
+.plat-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1}
+.plat-vpn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--red);background:rgba(239,68,68,.1);padding:2px 7px;border-radius:6px}
+.plat-go{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#60a5fa}
+.plat-actions{display:flex;gap:6px;flex-wrap:wrap}
+.plat-proxy-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#a78bfa;background:rgba(168,85,247,.1);padding:4px 9px;border-radius:7px;cursor:pointer;border:none;text-decoration:none;transition:all .2s}
+.plat-proxy-btn:hover{background:#a855f7;color:#fff}
+.plat-fav{position:absolute;top:10px;right:10px;z-index:5;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:grid;place-items:center;transition:all .2s}
+.plat-fav:hover{background:rgba(255,255,255,.12)}
+.plat-fav.active svg{fill:var(--red);stroke:var(--red)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.empty-state b{color:var(--ink)}
+.fav-badge-top{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#f87171;padding:5px 10px;border-radius:8px;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.fav-badge-top:hover{background:#ef4444;color:#fff}
+.fav-badge-top svg{width:14px;height:14px}
+
+/* ===== Tab 2: 头图监控 ===== */
+.monitor-hero{padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line)}
+.monitor-hero h1{font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.monitor-hero p{font-size:12px;color:var(--muted);margin-top:2px}
+.monitor-live{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:16px;cursor:pointer}
+.monitor-live.running{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.monitor-live.running .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.monitor-live.stopped{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.15)}
+.monitor-live.stopped .dot{background:var(--muted)}
+.monitor-live .dot{width:7px;height:7px;border-radius:50%;animation:pulse 1.5s infinite}
+.monitor-countdown{font-size:11px;color:var(--muted)}
+.monitor-controls{display:flex;align-items:center;gap:10px;padding:12px 28px;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--line)}
+.monitor-btn{padding:7px 16px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;transition:.2s}
+.monitor-btn-primary{background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff}
+.monitor-btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,110,247,.4)}
+.monitor-btn-ghost{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--line)}
+.monitor-btn-ghost:hover{background:rgba(255,255,255,.1);color:var(--ink)}
+.monitor-btn-danger{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.monitor-btn-danger:hover{background:rgba(239,68,68,.2)}
+.monitor-select-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.monitor-select-wrap select{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;outline:none}
+.monitor-stats{display:flex;gap:14px;font-size:11px;margin-left:auto}
+.ms{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.ms b{font-size:13px}
+.ms .changed{color:#f87171}
+.ms .ok{color:var(--green)}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;padding:18px 28px}
+.monitor-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.3s}
+.monitor-card:hover{border-color:rgba(79,110,247,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.monitor-card.changed{border-color:rgba(239,68,68,.4);animation:flashRed 1s ease-in-out 3}
+@keyframes flashRed{0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 20px rgba(239,68,68,.35)}}
+.monitor-card.checking{border-color:rgba(79,110,247,.35)}
+.monitor-card.error{border-color:rgba(239,68,68,.2);opacity:.7}
+.monitor-card.manual{border-color:rgba(245,158,11,.25)}
+.monitor-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+.monitor-card-head-l{display:flex;align-items:center;gap:8px}
+.monitor-site-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.monitor-site-name{font-size:13px;font-weight:700}
+.monitor-site-url{font-size:10px;color:var(--muted)}
+.monitor-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:4px}
+.monitor-status.normal{background:rgba(34,197,94,.1);color:var(--green)}
+.monitor-status.changed{background:rgba(239,68,68,.12);color:#f87171}
+.monitor-status.checking{background:rgba(79,110,247,.12);color:#60a5fa}
+.monitor-status.baseline,.monitor-status.pending{background:rgba(100,116,139,.1);color:var(--muted)}
+.monitor-status.error{background:rgba(239,68,68,.08);color:var(--red)}
+.monitor-status.manual{background:rgba(245,158,11,.1);color:var(--amber)}
+.monitor-status .sd{width:5px;height:5px;border-radius:50%}
+.monitor-status.normal .sd{background:var(--green)}
+.monitor-status.changed .sd{background:var(--red);animation:pulse 1s infinite}
+.monitor-status.checking .sd{background:#3b82f6;animation:pulse 1s infinite}
+.monitor-status.manual .sd{background:var(--amber)}
+.monitor-shot{position:relative;margin:0 14px;border-radius:10px;overflow:hidden;background:#050810;aspect-ratio:4/3}
+.monitor-shot img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.monitor-shot .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;flex-direction:column;gap:6px}
+.monitor-shot .loading-overlay{position:absolute;inset:0;background:rgba(5,8,16,.7);display:flex;align-items:center;justify-content:center}
+.monitor-spinner{width:28px;height:28px;border:3px solid rgba(79,110,247,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.monitor-card-foot{padding:8px 14px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monitor-foot-info{font-size:10px;color:var(--muted);line-height:1.5}
+.monitor-foot-info b{color:#94a3b8}
+.monitor-foot-actions{display:flex;gap:5px}
+.monitor-foot-btn{font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);transition:.2s;text-decoration:none;white-space:nowrap}
+.monitor-foot-btn:hover{background:rgba(79,110,247,.12);color:#60a5fa;border-color:rgba(79,110,247,.3)}
+.monitor-history{padding:8px 28px 40px}
+.monitor-history h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.monitor-history .count{font-size:11px;background:rgba(79,110,247,.15);color:#60a5fa;padding:2px 8px;border-radius:8px}
+.monitor-history-list{display:flex;flex-direction:column;gap:8px}
+.monitor-history-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:.2s}
+.monitor-history-item:hover{border-color:rgba(79,110,247,.2)}
+.mhi-time{font-size:11px;color:var(--muted);min-width:110px}
+.mhi-site{font-size:12px;font-weight:600;padding:3px 10px;border-radius:7px;background:rgba(255,255,255,.04);min-width:90px;text-align:center}
+.mhi-desc{font-size:11px;color:#94a3b8;flex:1}
+.mhi-desc b{color:#f87171}
+.mhi-arrow{color:var(--muted)}
+.empty-history{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+
+/* Modal */
+.monitor-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:999;display:none;align-items:center;justify-content:center;padding:24px}
+.monitor-modal-overlay.show{display:flex}
+.monitor-modal{background:var(--card);border:1px solid var(--line);border-radius:16px;max-width:1000px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
+.monitor-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line)}
+.monitor-modal-head h3{font-size:15px;font-weight:700}
+.monitor-modal-close{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);cursor:pointer;font-size:16px;color:var(--muted);transition:.2s}
+.monitor-modal-close:hover{background:rgba(239,68,68,.15);color:#f87171}
+.monitor-modal-body{padding:20px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.compare-col h4{font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.compare-tag{font-size:10px;padding:2px 7px;border-radius:5px}
+.compare-tag.old{background:rgba(100,116,139,.12);color:var(--muted)}
+.compare-tag.new{background:rgba(239,68,68,.12);color:#f87171}
+.compare-img{width:100%;border-radius:10px;border:1px solid var(--line);aspect-ratio:4/3;object-fit:cover;object-position:top;background:#050810}
+.compare-info{text-align:center;font-size:11px;color:var(--muted);margin-top:6px}
+.compare-info b{color:#f87171}
+
+/* ===== Tab 3: 活动玩法库 ===== */
+.act-hero{text-align:center;padding:36px 20px 22px}
+.act-hero h1{font-size:34px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.act-hero p{font-size:13px;color:var(--muted);max-width:680px;margin:0 auto;line-height:1.6}
+.act-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:0 20px 24px}
+.act-stat-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;text-align:center;min-width:110px}
+.act-stat-item .val{font-size:24px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.act-stat-item .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.act-timeline{padding:0 20px;margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.act-timeline::-webkit-scrollbar{display:none}
+.act-timeline-inner{display:flex;gap:6px;min-width:max-content}
+.act-tm{flex-shrink:0;padding:7px 16px;border-radius:9px;font-size:12px;font-weight:600;background:var(--card);border:1px solid var(--line);color:var(--muted);cursor:pointer;transition:all .2s}
+.act-tm:hover{color:var(--ink)}
+.act-tm.active{background:linear-gradient(135deg,rgba(79,110,247,.2),rgba(168,85,247,.15));border-color:rgba(79,110,247,.3);color:#fff}
+.act-tm.has-ongoing::after{content:'';display:block;width:5px;height:5px;margin:4px auto 0;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.act-tm.has-activity::after{content:'';display:block;width:5px;height:5px;margin:4px auto 0;border-radius:50%;background:var(--accent)}
+.act-filters{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 20px 20px}
+.act-filters-search{position:relative;width:240px}
+.act-filters-search input{width:100%;padding:9px 12px 9px 34px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:12px;outline:none}
+.act-filters-search input:focus{border-color:var(--accent)}
+.act-filters-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);width:14px;height:14px}
+.act-chip{padding:6px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--muted);transition:all .2s;white-space:nowrap}
+.act-chip:hover{color:var(--ink)}
+.act-chip.active{background:linear-gradient(135deg,rgba(79,110,247,.2),rgba(168,85,247,.15));border-color:var(--accent);color:#fff}
+.act-chip.ongoing{border-color:rgba(34,197,94,.25);color:var(--green)}
+.act-chip.ongoing.active{background:rgba(34,197,94,.12);border-color:var(--green)}
+.act-chip.upcoming{border-color:rgba(245,158,11,.25);color:var(--amber)}
+.act-chip.upcoming.active{background:rgba(245,158,11,.12);border-color:var(--amber)}
+.act-platform-tabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 20px 20px}
+.act-ptab{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:1.5px solid var(--line);background:var(--card);transition:all .2s}
+.act-ptab:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px)}
+.act-ptab.active{border-color:var(--accent);box-shadow:0 0 12px rgba(79,110,247,.25);transform:translateY(-2px)}
+.act-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;padding:0 20px 60px;max-width:1400px;margin:0 auto}
+.act-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;transition:all .25s;position:relative;overflow:hidden}
+.act-card:hover{border-color:rgba(255,255,255,.1);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.act-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.act-card.amazon::before{background:linear-gradient(90deg,#FF9900,#e68a00)}
+.act-card.shein::before{background:linear-gradient(90deg,#1a1a1a,#555)}
+.act-card.homedepot::before{background:linear-gradient(90deg,#F96302,#e55a00)}
+.act-card.temu::before{background:linear-gradient(90deg,#FB7701,#e03f00)}
+.act-card.aliexpress::before{background:linear-gradient(90deg,#E62E04,#cc2903)}
+.act-card.wayfair::before{background:linear-gradient(90deg,#7B189F,#5e1280)}
+.act-card.lowes::before{background:linear-gradient(90deg,#004990,#003a73)}
+.act-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.act-card-avatar{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.act-card-title{font-size:13px;font-weight:700;line-height:1.3}
+.act-card-sub{font-size:11px;color:var(--muted)}
+.act-status-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;margin-left:auto;flex-shrink:0}
+.act-status-tag.ongoing{background:rgba(34,197,94,.1);color:var(--green)}
+.act-status-tag.upcoming{background:rgba(245,158,11,.1);color:var(--amber)}
+.act-status-tag.past{background:rgba(100,116,139,.08);color:var(--muted)}
+.act-status-dot{width:5px;height:5px;border-radius:50%}
+.act-status-tag.ongoing .act-status-dot{background:var(--green);animation:pulse 1.5s infinite}
+.act-card-date{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.act-card-desc{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:10px}
+.act-mechanisms{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.act-mech-tag{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(79,110,247,.1);color:#8fa8ff;border:1px solid rgba(79,110,247,.12)}
+.act-mech-tag.orange{background:rgba(251,119,1,.1);color:#fc962f;border-color:rgba(251,119,1,.12)}
+.act-mech-tag.green{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.12)}
+.act-mech-tag.purple{background:rgba(168,85,247,.1);color:#c084fc;border-color:rgba(168,85,247,.12)}
+.act-mech-tag.pink{background:rgba(236,72,153,.1);color:#f472b6;border-color:rgba(236,72,153,.12)}
+.act-mech-tag.cyan{background:rgba(6,182,212,.1);color:#22d3ee;border-color:rgba(6,182,212,.12)}
+.act-card-steps{background:var(--card2);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.6}
+.act-card-steps strong{color:var(--ink)}
+.act-card-steps ol{margin:0;padding-left:16px}
+.act-card-steps ol li::marker{color:var(--accent);font-weight:700}
+.act-card-foot{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.act-card-foot a{font-size:11px;color:#60a5fa;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:color .2s}
+.act-card-foot a:hover{color:#8fa8ff}
+.act-card-target{font-size:10px;color:var(--muted);margin-left:auto}
+
+/* Toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px}
+.toast{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);animation:toastSlideIn .25s ease-out;font-size:12px;color:var(--ink)}
+.toast.alert{border-color:rgba(239,68,68,.35)}
+.toast.info{border-color:rgba(79,110,247,.25)}
+.toast.success{border-color:rgba(34,197,94,.25)}
+@keyframes toastSlideIn{from{transform:translateX(380px);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.removing{animation:toastSlideOut .25s ease-in forwards}
+@keyframes toastSlideOut{to{transform:translateX(380px);opacity:0}}
+.toast-icon{font-size:18px;flex-shrink:0}
+.toast-body{flex:1}
+.toast-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.toast-msg{font-size:11px;color:var(--muted);line-height:1.4}
+.toast-close{font-size:14px;color:var(--muted);cursor:pointer;padding:0 0 0 6px}
+.toast-close:hover{color:var(--ink)}
+
+/* Footer */
+.page-footer{text-align:center;padding:28px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);position:relative;z-index:1}
+.page-footer a{color:#60a5fa;text-decoration:none}
+
+@media(max-width:768px){
+  .nav-inner{padding:10px 14px;gap:12px}
+  .nav-tab{padding:6px 12px;font-size:11px}
+  .nav-hero h1{font-size:28px}
+  .plat-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
+  .monitor-grid{grid-template-columns:1fr;padding:12px 14px}
+  .act-grid{grid-template-columns:1fr}
+  .monitor-modal-body{grid-template-columns:1fr}
+  .monitor-controls{padding:10px 14px;gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- ===== 顶部导航 ===== -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" onclick="switchTab('platform')">
+      <div class="nav-logo-mark">跨</div>
+      <span>跨境通</span>
+    </a>
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-tab="platform">
+        <span class="tab-icon">🌐</span> 平台导航
+      </div>
+      <div class="nav-tab" data-tab="monitor">
+        <span class="tab-icon">📡</span> 头图监控
+        <span class="nav-badge" id="monitorBadge" style="display:none">变化</span>
+      </div>
+      <div class="nav-tab" data-tab="activity">
+        <span class="tab-icon">🎯</span> 活动玩法库
+        <span class="nav-badge" id="actBadge" style="display:none">进行中</span>
+      </div>
+    </div>
+    <div class="cloud-indicator" id="cloudIndicator">
+      <div class="cloud-dot offline"></div>
+      <span>云端监控</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Tab 1: 平台导航 -->
+<div class="tab-content active" id="tab-platform">
+  <div class="nav-hero">
+    <h1>全球跨境平台<em>一键直达</em></h1>
+    <p>聚合北美、欧洲、东南亚、日韩、拉美、中东、非洲、俄罗斯、印度及中国出海等全球主流电商平台买家端</p>
+    <div class="nav-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="platformSearch" placeholder="搜索平台名称，如 Amazon、Shein、Shopee…" autocomplete="off">
+    </div>
+    <div class="nav-stats">
+      共 <b id="platTotal">0</b> 个平台 · 
+      <span class="fav-badge-top" id="favBadgeTop" onclick="toggleFavFilter()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span id="favCountTop">0</span>
+      </span>
+    </div>
+  </div>
+  <div class="nav-filters" id="navFilters"></div>
+  <div id="platformMain"></div>
+</div>
+
+<!-- Tab 2: 头图监控 -->
+<div class="tab-content" id="tab-monitor">
+  <div class="monitor-hero">
+    <div>
+      <h1>📡 跨境平台头图监控系统</h1>
+      <p>自动监控 Amazon / Shein / Home Depot / Temu / AliExpress / Wayfair / Lowe's 首页头图变化</p>
+    </div>
+    <div>
+      <div class="monitor-live stopped" id="monitorLive" onclick="monToggle()">
+        <span class="dot"></span>
+        <span id="monitorLiveText">等待云端数据...</span>
+      </div>
+      <div class="monitor-countdown" id="monitorCountdown"></div>
+    </div>
+  </div>
+  <div class="monitor-controls">
+    <button class="monitor-btn monitor-btn-primary" id="monitorStartBtn" onclick="monToggle()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      启动监控
+    </button>
+    <button class="monitor-btn monitor-btn-ghost" onclick="monCheckAll()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      立即检测
+    </button>
+    <button class="monitor-btn monitor-btn-danger" onclick="monClearChanges()">清除变化</button>
+    <div class="monitor-select-wrap">
+      间隔<select id="monInterval" onchange="monChangeInterval()">
+        <option value="60">1小时</option><option value="360">6小时</option>
+        <option value="720">12小时</option><option value="1440" selected>1天</option>
+        <option value="10080">7天</option></select>
+      灵敏度<select id="monThreshold" onchange="monChangeThreshold()">
+        <option value="10">高</option><option value="18" selected>中</option><option value="30">低</option></select>
+    </div>
+    <div class="monitor-stats">
+      <div class="ms">监控 <b id="monStatTotal">7</b></div>
+      <div class="ms">正常 <b class="ok" id="monStatOk">0</b></div>
+      <div class="ms">变化 <b class="changed" id="monStatChanged">0</b></div>
+    </div>
+  </div>
+  <div class="monitor-grid" id="monitorGrid"></div>
+  <div class="monitor-history">
+    <h3>📋 变化历史 <span class="count" id="monHistoryCount">0</span></h3>
+    <div class="monitor-history-list" id="monHistoryList">
+      <div class="empty-history">暂无变化记录</div>
+    </div>
+  </div>
+  <div class="monitor-modal-overlay" id="monModal" onclick="monCloseModal(event)">
+    <div class="monitor-modal" onclick="event.stopPropagation()">
+      <div class="monitor-modal-head">
+        <h3 id="monModalTitle">截图对比</h3>
+        <div class="monitor-modal-close" onclick="monCloseModal()">✕</div>
+      </div>
+      <div class="monitor-modal-body" id="monModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 3: 活动玩法库 -->
+<div class="tab-content" id="tab-activity">
+  <div class="act-hero">
+    <h1>🌍 跨境活动玩法库</h1>
+    <p>收录 7 大专平台全年营销活动、促销机制与选品窗口，助你精准卡点</p>
+  </div>
+  <div class="act-stats" id="actStatsRow"></div>
+  <div class="act-timeline"><div class="act-timeline-inner" id="actTimeline"></div></div>
+  <div class="act-filters">
+    <div class="act-filters-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="actSearch" placeholder="搜索活动、玩法、平台...">
+    </div>
+    <div class="act-chip active" data-status="all">全部</div>
+    <div class="act-chip ongoing" data-status="ongoing">● 进行中</div>
+    <div class="act-chip upcoming" data-status="upcoming">◆ 即将开始</div>
+    <div class="act-chip" data-status="past">● 已结束</div>
+  </div>
+  <div class="act-platform-tabs" id="actPlatformTabs"></div>
+  <div class="act-grid" id="actGrid"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Footer -->
+<div class="page-footer">
+  数据收集于各平台公开买家端 · 访问时请遵守当地法律法规 · 云端监控由 GitHub Actions 每日自动运行
+</div>
+
+<script>
+// ============ 全局 Tab 切换 ============
+function switchTab(name) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+
+// ============ 通用 Toast ============
+function showToast(type, title, msg) {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${type==='alert'?'🔔':type==='success'?'✅':'ℹ️'}</div>
+    <div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>
+    <div class="toast-close">✕</div>`;
+  t.querySelector('.toast-close').onclick = () => { t.classList.add('removing'); setTimeout(() => t.remove(), 250); };
+  c.appendChild(t);
+  setTimeout(() => { if(t.parentNode){ t.classList.add('removing'); setTimeout(() => t.remove(), 250); } }, 6000);
+}
+</script>
+
+<!-- ============ Tab 1: 平台导航 JS ============ -->
+<script>
+const PLAT_DATA = [
+  { region:"北美", name:"Amazon", loc:"amazon.com", url:"https://www.amazon.com", color:"#FF9900", desc:"全球最大综合电商" },
+  { region:"北美", name:"eBay", loc:"ebay.com", url:"https://www.ebay.com", color:"#E53238", desc:"老牌拍卖+一口价平台" },
+  { region:"北美", name:"Walmart", loc:"walmart.com", url:"https://www.walmart.com", color:"#0071CE", desc:"美国最大零售商线上平台" },
+  { region:"北美", name:"Etsy", loc:"etsy.com", url:"https://www.etsy.com", color:"#F1641E", desc:"手作创意商品垂直社区" },
+  { region:"北美", name:"Target", loc:"target.com", url:"https://www.target.com", color:"#CC0000", desc:"美国第二大折扣零售商" },
+  { region:"北美", name:"Wayfair", loc:"wayfair.com", url:"https://www.wayfair.com", color:"#7B189F", desc:"家居家具垂直平台" },
+  { region:"北美", name:"Best Buy", loc:"bestbuy.com", url:"https://www.bestbuy.com", color:"#0046BE", desc:"消费电子专业零售" },
+  { region:"北美", name:"Costco", loc:"costco.com", url:"https://www.costco.com", color:"#D31E2A", desc:"会员制仓储电商" },
+  { region:"北美", name:"Home Depot", loc:"homedepot.com", url:"https://www.homedepot.com", color:"#F96302", vpn:true, desc:"家居建材园艺垂直" },
+  { region:"北美", name:"Newegg", loc:"newegg.com", url:"https://www.newegg.com", color:"#F26822", desc:"IT数码DIY硬件垂直" },
+  { region:"欧洲", name:"Amazon UK", loc:"amazon.co.uk", url:"https://www.amazon.co.uk", color:"#FF9900", desc:"亚马逊英国站" },
+  { region:"欧洲", name:"Amazon DE", loc:"amazon.de", url:"https://www.amazon.de", color:"#FF9900", desc:"亚马逊德国站" },
+  { region:"欧洲", name:"Amazon FR", loc:"amazon.fr", url:"https://www.amazon.fr", color:"#FF9900", desc:"亚马逊法国站" },
+  { region:"欧洲", name:"Amazon IT", loc:"amazon.it", url:"https://www.amazon.it", color:"#FF9900", desc:"亚马逊意大利站" },
+  { region:"欧洲", name:"Amazon ES", loc:"amazon.es", url:"https://www.amazon.es", color:"#FF9900", desc:"亚马逊西班牙站" },
+  { region:"欧洲", name:"eBay UK", loc:"ebay.co.uk", url:"https://www.ebay.co.uk", color:"#E53238", desc:"eBay英国站" },
+  { region:"欧洲", name:"eBay DE", loc:"ebay.de", url:"https://www.ebay.de", color:"#E53238", desc:"eBay德国站" },
+  { region:"欧洲", name:"Allegro", loc:"allegro.pl", url:"https://www.allegro.pl", color:"#FF5A00", desc:"波兰最大综合电商" },
+  { region:"欧洲", name:"Cdiscount", loc:"cdiscount.com", url:"https://www.cdiscount.com", color:"#005DA8", desc:"法国本土第二大" },
+  { region:"欧洲", name:"Otto", loc:"otto.de", url:"https://www.otto.de", color:"#E50019", desc:"德国老牌零售电商" },
+  { region:"欧洲", name:"bol.com", loc:"bol.com", url:"https://www.bol.com", color:"#0066CC", desc:"荷兰比利时最大" },
+  { region:"欧洲", name:"Zalando", loc:"zalando.com", url:"https://www.zalando.com", color:"#FF6900", desc:"欧洲最大时尚电商" },
+  { region:"欧洲", name:"Rakuten France", loc:"fr.shopping.rakuten.com", url:"https://fr.shopping.rakuten.com", color:"#BF0000", desc:"乐天法国站" },
+  { region:"欧洲", name:"ManoMano", loc:"manomano.fr", url:"https://www.manomano.fr", color:"#00C2A8", desc:"欧洲DIY园艺平台" },
+  { region:"东南亚", name:"Shopee", loc:"shopee.com", url:"https://shopee.com", color:"#EE4D2D", desc:"东南亚印尼双龙头" },
+  { region:"东南亚", name:"Lazada", loc:"lazada.com", url:"https://www.lazada.com", color:"#0F156D", desc:"阿里旗下东南亚六国" },
+  { region:"东南亚", name:"Tokopedia", loc:"tokopedia.com", url:"https://www.tokopedia.com", color:"#42B549", desc:"印尼最大C2C平台" },
+  { region:"东南亚", name:"TikTok Shop", loc:"shop.tiktok.com", url:"https://shop.tiktok.com", color:"#000000", desc:"内容电商新势力" },
+  { region:"东南亚", name:"Bukalapak", loc:"bukalapak.com", url:"https://www.bukalapak.com", color:"#E31F4B", desc:"印尼综合电商" },
+  { region:"东南亚", name:"Tiki", loc:"tiki.vn", url:"https://tiki.vn", color:"#1A9CB7", desc:"越南本土平台" },
+  { region:"东南亚", name:"Blibli", loc:"blibli.com", url:"https://www.blibli.com", color:"#0095DA", desc:"印尼金鹰集团旗下" },
+  { region:"日韩", name:"Rakuten", loc:"rakuten.co.jp", url:"https://www.rakuten.co.jp", color:"#BF0000", desc:"日本最大综合电商" },
+  { region:"日韩", name:"Yahoo! Japan", loc:"shopping.yahoo.co.jp", url:"https://shopping.yahoo.co.jp", color:"#FF0033", desc:"雅虎日本购物" },
+  { region:"日韩", name:"Amazon JP", loc:"amazon.co.jp", url:"https://www.amazon.co.jp", color:"#FF9900", desc:"亚马逊日本站" },
+  { region:"日韩", name:"Mercari", loc:"mercari.com", url:"https://www.mercari.com", color:"#FF5A1F", desc:"日本最大C2C二手" },
+  { region:"日韩", name:"Coupang", loc:"coupang.com", url:"https://www.coupang.com", color:"#F8323E", desc:"韩国第一电商" },
+  { region:"日韩", name:"Gmarket", loc:"gmarket.co.kr", url:"https://global.gmarket.co.kr", color:"#06B945", desc:"韩国老牌综合电商" },
+  { region:"日韩", name:"11STREET", loc:"11st.co.kr", url:"https://global.11st.co.kr", color:"#1A1A1A", desc:"韩国SK旗下电商" },
+  { region:"日韩", name:"SSG", loc:"ssg.com", url:"https://www.ssg.com", color:"#C00000", desc:"新世界百货旗下" },
+  { region:"印度", name:"Amazon IN", loc:"amazon.in", url:"https://www.amazon.in", color:"#FF9900", desc:"亚马逊印度站" },
+  { region:"印度", name:"Flipkart", loc:"flipkart.com", url:"https://www.flipkart.com", color:"#2874F0", desc:"印度最大电商" },
+  { region:"印度", name:"Myntra", loc:"myntra.com", url:"https://www.myntra.com", color:"#FF3E6C", desc:"Flipkart时尚垂直" },
+  { region:"印度", name:"Snapdeal", loc:"snapdeal.com", url:"https://www.snapdeal.com", color:"#E40046", desc:"印度综合电商" },
+  { region:"印度", name:"Meesho", loc:"meesho.com", url:"https://www.meesho.com", color:"#F43397", desc:"印度社交电商代表" },
+  { region:"拉美", name:"Mercado Libre", loc:"mercadolibre.com", url:"https://www.mercadolibre.com", color:"#FFE600", dark:true, desc:"拉美最大电商" },
+  { region:"拉美", name:"Amazon BR", loc:"amazon.com.br", url:"https://www.amazon.com.br", color:"#FF9900", desc:"亚马逊巴西站" },
+  { region:"拉美", name:"Americanas", loc:"americanas.com", url:"https://www.americanas.com", color:"#E60012", desc:"巴西老牌零售电商" },
+  { region:"拉美", name:"Magazine Luiza", loc:"magazineluiza.com.br", url:"https://www.magazineluiza.com.br", color:"#0086FF", desc:"巴西科技零售巨头" },
+  { region:"拉美", name:"Falabella", loc:"falabella.com", url:"https://www.falabella.com", color:"#A8CF45", desc:"智利零售集团" },
+  { region:"中东", name:"Noon", loc:"noon.com", url:"https://www.noon.com", color:"#FEEE00", dark:true, desc:"中东本土电商" },
+  { region:"中东", name:"Amazon AE", loc:"amazon.ae", url:"https://www.amazon.ae", color:"#FF9900", desc:"亚马逊阿联酋站" },
+  { region:"中东", name:"Amazon SA", loc:"amazon.sa", url:"https://www.amazon.sa", color:"#FF9900", desc:"亚马逊沙特站" },
+  { region:"非洲", name:"Jumia", loc:"jumia.com", url:"https://www.jumia.com", color:"#F68B1E", desc:"非洲最大电商" },
+  { region:"非洲", name:"Kilimall", loc:"kilimall.com", url:"https://www.kilimall.com", color:"#E60012", desc:"中国出海非洲平台" },
+  { region:"非洲", name:"Takealot", loc:"takealot.com", url:"https://www.takealot.com", color:"#00A0E0", desc:"南非最大电商" },
+  { region:"俄罗斯", name:"Ozon", loc:"ozon.ru", url:"https://www.ozon.ru", color:"#005BFF", desc:"俄罗斯第二大电商" },
+  { region:"俄罗斯", name:"Wildberries", loc:"wildberries.ru", url:"https://www.wildberries.ru", color:"#CB11AB", desc:"俄罗斯最大电商" },
+  { region:"中国出海", name:"AliExpress", loc:"aliexpress.com", url:"https://www.aliexpress.com", color:"#E62E04", desc:"速卖通阿里出海旗舰" },
+  { region:"中国出海", name:"Shein", loc:"us.shein.com", url:"https://us.shein.com", color:"#000000", vpn:true, desc:"希音快时尚出海标杆" },
+  { region:"中国出海", name:"Temu", loc:"temu.com", url:"https://www.temu.com", color:"#FB7701", vpn:true, desc:"拼多多出海极致性价比" },
+  { region:"中国出海", name:"Wish", loc:"wish.com", url:"https://www.wish.com", color:"#4BC2F6", desc:"移动端低价跨境" },
+  { region:"中国出海", name:"DHgate", loc:"dhgate.com", url:"https://www.dhgate.com", color:"#FF6600", desc:"敦煌网B2B跨境批发" },
+  { region:"中国出海", name:"Banggood", loc:"banggood.com", url:"https://www.banggood.com", color:"#FF7E00", desc:"3C数码玩具跨境" },
+  { region:"中国出海", name:"Cupshe", loc:"cupshe.com", url:"https://www.cupshe.com", color:"#1B1B3A", desc:"泳装出海品牌" },
+  { region:"中国出海", name:"Cider", loc:"shopcider.com", url:"https://www.shopcider.com", color:"#FF4D4D", desc:"快时尚出海新锐" },
+  { region:"中国出海", name:"PatPat", loc:"patpat.com", url:"https://www.patpat.com", color:"#FF7DB5", desc:"童装母婴出海品牌" }
+];
+
+const PLAT_REGIONS = ["全部","⭐ 收藏","北美","欧洲","东南亚","日韩","印度","拉美","中东","非洲","俄罗斯","中国出海"];
+let platActiveRegion = "全部", platKeyword = "";
+
+function getFavs(){ try{return JSON.parse(localStorage.getItem('crossborder_favs')||'[]')}catch(e){return[]}}
+function isFav(u){return getFavs().includes(u)}
+function toggleFav(u){const f=getFavs();isFav(u)?setFavs(f.filter(x=>x!==u)):setFavs([...f,u])}
+function setFavs(a){localStorage.setItem('crossborder_favs',JSON.stringify(a));updateFavUI()}
+function updateFavUI(){document.getElementById('favCountTop').textContent=getFavs().length}
+function toggleFavFilter(){
+  platActiveRegion = platActiveRegion==="⭐ 收藏" ? "全部" : "⭐ 收藏";
+  document.querySelectorAll('.nav-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-chip').forEach(c=>{if(c.textContent.trim()===platActiveRegion||(platActiveRegion==="⭐ 收藏"&&c.textContent.includes("收藏")))c.classList.add('active')});
+  renderPlatform();
+}
+updateFavUI();
+
+function platInitials(n){const p=n.replace(/[^A-Za-z0-9\u4e00-\u9fa5]/g," ").trim().split(/\s+/);return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():p[0].slice(0,2).toUpperCase()}
+
+function renderPlatform(){
+  const kw=platKeyword.trim().toLowerCase(), favs=getFavs();
+  const filtered=PLAT_DATA.filter(p=>{
+    const rOk=platActiveRegion==="全部"||(platActiveRegion==="⭐ 收藏"?favs.includes(p.url):p.region===platActiveRegion);
+    return rOk&&(!kw||p.name.toLowerCase().includes(kw)||p.loc.toLowerCase().includes(kw)||p.desc.toLowerCase().includes(kw));
+  });
+  document.getElementById('platTotal').textContent=filtered.length;
+  const main=document.getElementById('platformMain');
+  if(!filtered.length){main.innerHTML=`<div class="empty-state">${platActiveRegion==="⭐ 收藏"?'还没有收藏任何平台':'没有找到匹配的平台'}</div>`;return}
+  const groups={};filtered.forEach(p=>{(groups[p.region]=groups[p.region]||[]).push(p)});
+  let html='';
+  PLAT_REGIONS.filter(r=>r!=="全部"&&r!=="⭐ 收藏").forEach(r=>{if(!groups[r])return;
+    html+=`<div class="plat-section"><div class="plat-section-head"><span class="plat-section-tag">${r}</span><h2>${r}平台</h2><span class="qty">${groups[r].length}个</span></div><div class="plat-grid">`;
+    groups[r].forEach(p=>{
+      const c=p.dark?'#1a1f36':'#fff',vpn=p.vpn?`<span class="plat-vpn">⚠ 需VPN</span>`:'';
+      const proxyBtn=p.vpn?`<a class="plat-proxy-btn" href="proxy.html?url=${encodeURIComponent(p.url)}&name=${encodeURIComponent(p.name)}" onclick="event.stopPropagation()">☁ 云端</a>`:'';
+      const f=isFav(p.url);
+      html+=`<a class="plat-card" href="${p.url}" target="_blank" rel="noopener">
+        <button class="plat-fav${f?' active':''}" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.url}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <div class="plat-card-top"><div class="plat-ic" style="background:${p.color};color:${c}">${platInitials(p.name)}</div><div><h3>${p.name}</h3><div class="plat-loc">${p.loc} ${vpn}</div></div></div>
+        <div class="plat-desc">${p.desc}</div><div class="plat-actions"><span class="plat-go">访问买家端 →</span>${proxyBtn}</div></a>`;
+    });
+    html+=`</div></div>`;
+  });
+  main.innerHTML=html;
+}
+
+function initPlatform(){
+  PLAT_REGIONS.forEach((r,i)=>{
+    const c=document.createElement('div');c.className='nav-chip'+(i===0?' active':'')+(r.includes('收藏')?' nav-chip-fav':'');c.textContent=r;
+    c.onclick=()=>{document.querySelectorAll('.nav-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');platActiveRegion=r;renderPlatform()};
+    document.getElementById('navFilters').appendChild(c);
+  });
+  document.getElementById('platformSearch').addEventListener('input',e=>{platKeyword=e.target.value;renderPlatform()});
+  renderPlatform();
+}
+initPlatform();
+</script>
+
+<!-- ============ Tab 2: 头图监控 JS ============ -->
+<script>
+const MON_SITES = [
+  { name:'Amazon', url:'https://www.amazon.com/', color:'#FF9900', dark:true, loc:'amazon.com' },
+  { name:'Shein', url:'https://us.shein.com/', color:'#000000', dark:false, loc:'us.shein.com' },
+  { name:'Home Depot', url:'https://www.homedepot.com/', color:'#F96302', dark:false, loc:'homedepot.com' },
+  { name:'Temu', url:'https://www.temu.com/', color:'#FB7701', dark:false, loc:'temu.com' },
+  { name:'AliExpress', url:'https://www.aliexpress.com/?gatewayAdapt=glo2usa', color:'#E62E04', dark:false, loc:'aliexpress.com' },
+  { name:"Lowe's", url:'https://www.lowes.com/', color:'#004990', dark:false, loc:'lowes.com' },
+  { name:'Wayfair', url:'https://www.wayfair.com/', color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true, capHint:'Wayfair 启用 Press & Hold 人机验证，当前免费云方案无法自动绕过' },
+];
+
+const MON_STORAGE = 'banner-monitor-v1', MON_SHOT_W = 800, MON_SHOT_H = 600;
+const GITHUB_USER = 'caicai234', GITHUB_REPO = 'crossborder-banner-monitor', GITHUB_BRANCH = 'main';
+
+let monCloudMode = false;
+let monState = { monitoring:false, interval:1440, threshold:18, sites:{}, history:[], lastCheck:null, nextCheckAt:null };
+let monTimer=null, monCountdownTimer=null, monIsChecking=false;
+
+function monSleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function monInitials(n){return n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function monFmtTime(ts){if(!ts)return'--';const d=new Date(ts);return d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function monFetch(url,t=45000){return Promise.race([fetch(url,{mode:'cors'}),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),t))])}
+function monBlobToImg(b){return new Promise((res,rej)=>{const u=URL.createObjectURL(b),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img failed'))};i.src=u})}
+
+function monHash(img){const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,16,16);const d=ctx.getImageData(0,0,16,16).data,g=[];for(let i=0;i<d.length;i+=4)g.push(.299*d[i]+.587*d[i+1]+.114*d[i+2]);const a=g.reduce((a,b)=>a+b,0)/g.length;let h='';for(let i=0;i<g.length;i++)h+=g[i]>a?'1':'0';return h}
+function monHamming(h1,h2){if(!h1||!h2||h1.length!==h2.length)return 999;let d=0;for(let i=0;i<h1.length;i++)if(h1[i]!==h2[i])d++;return d}
+function monMakeThumb(img){const c=document.createElement('canvas');c.width=320;c.height=240;c.getContext('2d').drawImage(img,0,0,320,240);return c.toDataURL('image/jpeg',.6)}
+function monThumUrl(u,h){return`https://image.thum.io/get/width/${MON_SHOT_W}/crop/${h||MON_SHOT_H}/${u}`}
+
+async function monFetchShot(url,cropH){
+  const tUrl=monThumUrl(url,cropH);const proxies=[tUrl,`https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,`https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`];
+  for(let i=0;i<proxies.length;i++){try{const r=await monFetch(proxies[i],45000);if(!r.ok)continue;const b=await r.blob();if(!b.type.startsWith('image/')&&b.size<500)continue;const img=await monBlobToImg(b);if(img.naturalWidth<50)continue;return{img,blob:b,source:i}}catch(e){}}
+  throw new Error('所有截图方式均失败');
+}
+
+async function monCheckSite(site){
+  const st=monState.sites[site.name]||{};monState.sites[site.name]={...st,status:'checking'};monRenderCards();
+  try{
+    let hash,thumb;
+    if(site.htmlMode){
+      const html=await(await monFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://web.archive.org/web/20260627035940id_/'+site.url)}`,40000)).text();
+      if(html&&html.length>1000){
+        const imgs=[...new Set([...html.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)].map(m=>m[1]).filter(s=>!s.includes('data:')&&!s.includes('1x1')))];
+        hash=imgs.join('\n');
+      }else{hash=site.name.toLowerCase()+'-manual-placeholder';thumb=null}
+    }else{const{img}=await monFetchShot(site.url,site.cropHeight);hash=monHash(img);thumb=monMakeThumb(img)}
+    const now=Date.now(),prev=st.hash;let status='normal',changed=false;
+    if(site.htmlMode&&hash&&hash.includes('manual')){status='manual'}
+    else if(prev){const d=monHamming(prev,hash);if(d>monState.threshold){status='changed';changed=true}}
+    else{status='baseline'}
+    monState.sites[site.name]={...st,status,hash,thumb,oldThumb:changed?st.thumb:null,lastCheck:now,lastDist:changed?monHamming(prev,hash):(prev?monHamming(prev,hash):0),changes:(st.changes||0)+(changed?1:0),errorCount:0};
+    if(changed){monAddHistory(site,now,st.thumb,thumb,monHamming(prev,hash));monNotify(site.name);monPlayAlert()}
+    monSaveState();monRenderCards();return{status,changed};
+  }catch(e){monState.sites[site.name]={...st,status:'error',lastCheck:Date.now(),errorCount:(st.errorCount||0)+1,errorMsg:e.message};monSaveState();monRenderCards();return{status:'error'}}
+}
+
+async function monCheckAll(){
+  if(monIsChecking)return;monIsChecking=true;monState.lastCheck=Date.now();showToast('info','🔍 开始检测',`正在获取 ${MON_SITES.length} 个平台的最新数据...`);
+  for(let i=0;i<MON_SITES.length;i++){await monCheckSite(MON_SITES[i]);if(i<MON_SITES.length-1)await monSleep(2000)}
+  monState.nextCheckAt=monState.monitoring?Date.now()+monState.interval*60000:null;monIsChecking=false;monUpdateStats();showToast('success','✅ 检测完成',`${monFmtTime(Date.now())}`);monSaveState()
+}
+
+function monNotify(n){if('Notification' in window&&Notification.permission==='granted'){try{new Notification(`🔔 ${n} 头图变化!`,{body:'首页头图已更新',tag:n})}catch(e){}}}
+function monPlayAlert(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[[880,0,.15],[660,.18,.15],[880,.36,.2]].forEach(([f,s,d])=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=f;g.gain.setValueAtTime(0,ctx.currentTime+s);g.gain.linearRampToValueAtTime(.25,ctx.currentTime+s+.02);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+s+d);o.start(ctx.currentTime+s);o.stop(ctx.currentTime+s+d)})}catch(e){}}
+
+function monAddHistory(site,ts,oldThumb,newThumb,dist){monState.history.unshift({site:site.name,color:site.color,ts,oldThumb,newThumb,dist});if(monState.history.length>30)monState.history.pop();monRenderHistory()}
+function monRenderHistory(){
+  const el=document.getElementById('monHistoryList'),c=document.getElementById('monHistoryCount');c.textContent=monState.history.length;
+  if(!monState.history.length){el.innerHTML='<div class="empty-history">暂无变化记录</div>';return}
+  el.innerHTML=monState.history.map(h=>`<div class="monitor-history-item" onclick="monOpenCompare('${h.site}',${h.ts})"><div class="mhi-time">${monFmtTime(h.ts)}</div><div class="mhi-site" style="border-left:3px solid ${h.color}">${h.site}</div><div class="mhi-desc">${h.detail||'头图变化，差异度 '+h.dist+' / 256'}</div><div class="mhi-arrow">→</div></div>`).join('')
+}
+
+function monOpenCompare(n,ts){
+  const h=monState.history.find(x=>x.site===n&&x.ts===ts);if(!h)return;
+  document.getElementById('monModalTitle').textContent=`${h.site} 头图变化对比 — ${monFmtTime(h.ts)}`;
+  document.getElementById('monModalBody').innerHTML=h.detail?`<div style="grid-column:1/-1;text-align:center;padding:20px"><div style="font-size:15px;margin-bottom:12px">${h.site} Banner 图片集变化</div><div style="display:flex;gap:14px;justify-content:center"><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/新增(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">新增图片</div></div><div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px 20px"><div style="font-size:24px;font-weight:700;color:#f87171">${h.detail.match(/移除(\d+)张/)?.[1]||0}</div><div style="font-size:11px;color:var(--muted)">移除图片</div></div></div></div>`:`<div class="compare-col"><h4>变化前 <span class="compare-tag old">OLD</span></h4>${h.oldThumb?`<img class="compare-img" src="${h.oldThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无旧截图</div>'}</div><div class="compare-col"><h4>变化后 <span class="compare-tag new">NEW</span></h4>${h.newThumb?`<img class="compare-img" src="${h.newThumb}">`:'<div class="compare-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无新截图</div>'}<div class="compare-info">差异度 <b>${h.dist} / 256</b></div></div>`;
+  document.getElementById('monModal').classList.add('show')
+}
+function monCloseModal(e){if(e&&e.target!==document.getElementById('monModal'))return;document.getElementById('monModal').classList.remove('show')}
+
+function monRenderCards(){
+  document.getElementById('monitorGrid').innerHTML=MON_SITES.map(site=>{
+    const s=monState.sites[site.name]||{},status=s.status||'pending';
+    const stText={normal:'正常',changed:'已变化',checking:'检测中',error:'错误',baseline:'已建基线',pending:'未检测',manual:'需手动'}[status];
+    const txtColor=site.dark?'#1a1f36':'#fff',method=s.method||(site.htmlMode?'manual':'screenshot');
+    let sc='';
+    if(method==='images'&&s.banners&&s.banners.length>0){
+      sc=`<div style="display:flex;gap:3px;height:100%;padding:4px">${s.banners.slice(0,4).map(b=>`<div style="flex:1;overflow:hidden;border-radius:3px"><img src="${b.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.remove()"></div>`).join('')}</div><div style="position:absolute;bottom:4px;left:4px;font-size:10px;color:var(--green);font-weight:600">🖼 ${s.banners.length}张</div>`;
+    }else if(monCloudMode&&(status==='normal'||status==='baseline')&&!site.htmlMode){
+      sc=`<img src="https://image.thum.io/get/width/400/crop/300/${encodeURIComponent(site.url)}">`;
+    }else if(site.htmlMode){
+      sc=`<div class="placeholder"><div style="font-size:24px">🔗</div><div style="color:var(--ink);font-weight:600;font-size:12px">需手动检查</div><div style="font-size:10px;color:var(--muted);max-width:200px">${site.capHint||site.name+' 屏蔽自动化截图'}</div></div>`;
+    }else if(status==='checking'){sc=`${s.thumb?`<img src="${s.thumb}" style="opacity:.3">`:''}<div class="loading-overlay"><div class="monitor-spinner"></div></div>`}
+    else if(s.thumb){sc=`<img src="${s.thumb}">`}
+    else{sc=`<div class="placeholder"><div>📐</div><div>点击检测获取截图</div></div>`}
+    const distInfo=s.changeDetail?`新增${s.changeDetail.added}张 移除${s.changeDetail.removed}张`:(s.lastDist!=null&&s.lastDist>0?`差异度 ${s.lastDist}`:'');
+    return`<div class="monitor-card ${status}" onclick="window.open('${site.url}','_blank')"><div class="monitor-card-head"><div class="monitor-card-head-l"><div class="monitor-site-icon" style="background:${site.color};color:${txtColor}">${monInitials(site.name)}</div><div><div class="monitor-site-name">${site.name}</div><div class="monitor-site-url">${site.loc}</div></div></div><div class="monitor-status ${status}"><span class="sd"></span>${stText}</div>${method==='images'?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(74,222,128,.1);color:var(--green)">图片级</span>':''}</div><div class="monitor-shot">${sc}</div><div class="monitor-card-foot"><div class="monitor-foot-info">${s.lastCheck?`上次: <b>${monFmtTime(s.lastCheck)}</b>`:'未检测'} ${s.changes?`· 变化 <b>${s.changes}</b>次`:''} ${distInfo}</div><div class="monitor-foot-actions" onclick="event.stopPropagation()">${!site.htmlMode&&method!=='images'&&s.thumb?`<a class="monitor-foot-btn" href="${monThumUrl(site.url,site.cropHeight)}" target="_blank">实时截图</a>`:''}${s.oldThumb?`<a class="monitor-foot-btn" onclick="monOpenCompare('${site.name}',${s.lastCheck})">对比</a>`:''}</div></div></div>`;
+  }).join('')
+}
+
+function monUpdateStats(){
+  let ok=0,changed=0;MON_SITES.forEach(s=>{const st=monState.sites[s.name];if(st){if(st.status==='normal'||st.status==='baseline')ok++;if(st.status==='changed')changed++}});
+  document.getElementById('monStatOk').textContent=ok;document.getElementById('monStatChanged').textContent=changed;
+  const badge=document.getElementById('monitorBadge');
+  if(changed>0){badge.style.display='inline-block';badge.textContent=changed}
+  else{badge.style.display='none'}
+}
+
+function monSaveState(){
+  try{const d={monitoring:monState.monitoring,interval:monState.interval,threshold:monState.threshold,lastCheck:monState.lastCheck,sites:{},history:monState.history.slice(0,30)};MON_SITES.forEach(s=>{const st=monState.sites[s.name];if(st)d.sites[s.name]={hash:st.hash,thumb:st.thumb,lastCheck:st.lastCheck,changes:st.changes||0,status:st.status==='checking'?'normal':st.status,lastDist:st.lastDist}});localStorage.setItem(MON_STORAGE,JSON.stringify(d))}catch(e){if(monState.history.length>5){monState.history=monState.history.slice(0,5);monSaveState()}}
+}
+function monLoadState(){
+  try{const r=localStorage.getItem(MON_STORAGE);if(!r)return;const d=JSON.parse(r);monState.interval=d.interval||1440;monState.threshold=d.threshold||18;monState.lastCheck=d.lastCheck;monState.history=d.history||[];monState.sites=d.sites||{};Object.values(monState.sites).forEach(s=>{if(s.status==='checking')s.status='normal'})}catch(e){}
+}
+
+function monToggle(){monState.monitoring?monStop():monStart()}
+function monStart(){
+  monState.monitoring=true;monState.nextCheckAt=Date.now();
+  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+  document.getElementById('monitorLive').className='monitor-live running';document.getElementById('monitorLiveText').textContent='监控运行中';
+  document.getElementById('monitorStartBtn').innerHTML='⏸ 暂停监控';
+  showToast('success','🚀 监控已启动',`检测间隔 ${monState.interval} 分钟`);monCheckAll();
+  monTimer=setInterval(()=>{if(!monIsChecking)monCheckAll()},monState.interval*60000);
+  monCountdownTimer=setInterval(monUpdateCountdown,1000);monSaveState()
+}
+function monStop(){
+  monState.monitoring=false;monState.nextCheckAt=null;if(monTimer){clearInterval(monTimer);monTimer=null}if(monCountdownTimer){clearInterval(monCountdownTimer);monCountdownTimer=null}
+  document.getElementById('monitorLive').className='monitor-live stopped';document.getElementById('monitorLiveText').textContent='监控未启动';
+  document.getElementById('monitorStartBtn').innerHTML='▶ 启动监控';monUpdateCountdown();monSaveState()
+}
+function monUpdateCountdown(){
+  const el=document.getElementById('monitorCountdown');
+  if(!monState.monitoring||!monState.nextCheckAt||monIsChecking){el.textContent='';return}
+  const r=Math.max(0,monState.nextCheckAt-Date.now()),t=Math.floor(r/1000),d=Math.floor(t/86400),h=Math.floor((t%86400)/3600),m=Math.floor((t%3600)/60);
+  el.textContent=d>0?`下次: ${d}天${h}时`:`下次: ${h}时${m}分`
+}
+function monChangeInterval(){monState.interval=parseInt(document.getElementById('monInterval').value);if(monState.monitoring){monStop();monStart()}monSaveState()}
+function monChangeThreshold(){monState.threshold=parseInt(document.getElementById('monThreshold').value);monSaveState();showToast('info','⚙ 灵敏度已更新',`阈值: ${monState.threshold}`)}
+function monClearChanges(){MON_SITES.forEach(s=>{const st=monState.sites[s.name];if(st&&st.status==='changed'){st.status='normal';st.oldThumb=null}});monRenderCards();monUpdateStats();monSaveState()}
+
+// Cloud sync
+async function monFetchCloud(){
+  const urls=[`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/monitor-server/data/results.json`];
+  try{const u=location.origin+'/monitor-server/data/results.json';urls.unshift(u)}catch(e){}
+  for(const url of urls){try{const r=await fetch(url,{signal:AbortSignal.timeout(10000)});if(!r.ok)continue;const d=await r.json();if(d&&d.sites)return d}catch(e){}}
+  return null
+}
+
+function monSyncCloud(data){
+  if(!data||!data.sites)return;const ids={amazon:'amazon',shein:'shein',homedepot:'homedepot',temu:'temu',aliexpress:'aliexpress',lowes:'lowes',wayfair:'wayfair'};
+  MON_SITES.forEach(s=>{const id=ids[s.name.toLowerCase().replace(/[^a-z]/g,'')];const c=data.sites[id];if(!c)return;const ex=monState.sites[s.name]||{};monState.sites[s.name]={...ex,status:c.status||'normal',hash:c.hash,method:c.method||'screenshot',banners:c.banners||[],bannerCount:c.bannerCount||0,preview:c.preview||null,changeDetail:c.changeDetail||null,lastCheck:c.lastCheck,lastDist:c.lastDist,changes:c.changes||0,errorCount:c.errorCount||0}});
+  if(data.history&&data.history.length){monState.history=data.history.map(h=>({site:h.siteName||h.site,color:(MON_SITES.find(s=>s.name===(h.siteName||h.site))||{}).color||'#888',ts:h.time,dist:h.dist,detail:h.detail||null,method:h.method||null}));document.getElementById('monHistoryCount').textContent=monState.history.length}
+  monState.lastCheck=data.lastCheck
+}
+
+async function monInit(){
+  monLoadState();document.getElementById('monInterval').value=monState.interval;document.getElementById('monThreshold').value=monState.threshold;
+  const cd=await monFetchCloud();
+  if(cd){monCloudMode=true;monSyncCloud(cd);
+    document.getElementById('monitorLive').className='monitor-live running';document.getElementById('monitorLiveText').textContent='☁️ 云端运行中';
+    document.getElementById('cloudIndicator').innerHTML='<div class="cloud-dot online"></div><span>云端在线</span>'
+  }
+  monRenderCards();monRenderHistory();monUpdateStats();
+  setInterval(async()=>{const d=await monFetchCloud();if(d){monSyncCloud(d);monRenderCards();monUpdateStats();if(!monCloudMode){monCloudMode=true;document.getElementById('monitorLive').className='monitor-live running';document.getElementById('monitorLiveText').textContent='☁️ 云端运行中'}}},600000)
+}
+monInit();
+</script>
+
+<!-- ============ Tab 3: 活动玩法库 JS ============ -->
+<script>
+const ACT_PLATFORMS = {
+  amazon:{name:'Amazon',icon:'📦',color:'#FF9900',cls:'amazon'},shein:{name:'Shein',icon:'👗',color:'#000000',cls:'shein'},
+  homedepot:{name:'Home Depot',icon:'🏠',color:'#F96302',cls:'homedepot'},temu:{name:'Temu',icon:'⚡',color:'#FB7701',cls:'temu'},
+  aliexpress:{name:'AliExpress',icon:'🛒',color:'#E62E04',cls:'aliexpress'},wayfair:{name:'Wayfair',icon:'🛋',color:'#7B189F',cls:'wayfair'},
+  lowes:{name:"Lowe's",icon:'🔧',color:'#004990',cls:'lowes'}
+};
+const ACT_MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+const ACT_DATA = [
+  {id:'amz1',platform:'amazon',name:'Prime Day 2026',date:'2026-06-23',endDate:'2026-06-26',status:'ongoing',summary:'年度最大会员日大促，覆盖美欧日等18国',desc:'亚马逊年度旗舰大促，覆盖18个站点。2026年历时4天，流量为平时5-10倍。',mechanisms:[{t:'会员专属',c:'purple'},{t:'限时秒杀',c:'orange'},{t:'BD/LD',c:''},{t:'Coupon叠加',c:'green'}],steps:'1. 提前30天入仓FBA\n2. 提报Lightning Deal\n3. 设置Prime Exclusive Discount\n4. 配置Coupon叠加优惠',target:'Prime会员',url:'https://www.amazon.com/primeday'},
+  {id:'amz2',platform:'amazon',name:'Black Friday / Cyber Monday',date:'2026-11-27',endDate:'2026-11-30',summary:'全球最大购物节，黑五+网一连续4天超级大促',desc:'感恩节后周五至周一全品类开放。玩具、电子、家居热门。',mechanisms:[{t:'全网大促',c:'orange'},{t:'LD秒杀',c:'orange'},{t:'Coupon',c:'green'}],steps:'1. 9月提报LD\n2. 10月初FBA入仓\n3. 广告预算3-5倍\n4. 多ASIN组合促销',target:'全量消费者',url:'https://www.amazon.com/blackfriday'},
+  {id:'amz3',platform:'amazon',name:'Back to School 开学季',date:'2026-07-15',endDate:'2026-08-31',summary:'开学季大促，文具/电子/服装为主',desc:'7月中旬至8月底返校购物季，笔记本电脑、文具、背包核心品类。',mechanisms:[{t:'品类满减',c:'green'},{t:'学生专享',c:'purple'}],steps:'1. 6月底完成品类规划\n2. 设置Student Prime折扣\n3. 捆绑销售',target:'学生/家长',url:'https://www.amazon.com/backtoschool'},
+  {id:'she1',platform:'shein',name:'闪购 Flash Sale',date:'2026-06-10',endDate:'2026-12-31',summary:'每日限时限量闪购，部分低至$1.99',desc:'Shein核心引流机制，每天多场次滚动上新，移动端优先设计。',mechanisms:[{t:'限时倒计时',c:'orange'},{t:'库存预警',c:'red'},{t:'$1.99专区',c:'green'}],steps:'1. 选择高转化SKU\n2. 设置阶梯降价\n3. 配合Banner曝光\n4. Push推送提醒',target:'价格敏感用户',url:'https://us.shein.com/Flash-Sale-sc-011141246.html'},
+  {id:'she2',platform:'shein',name:'设计师联名 Shein X',date:'2026-03-01',endDate:'2026-12-31',summary:'全球独立设计师孵化，联名款限量发售',desc:'从设计稿到量产仅需7-15天，独立品牌页+搜索加权。',mechanisms:[{t:'限量发售',c:'pink'},{t:'独立品牌页',c:'purple'}],steps:'1. 设计师提交设计稿\n2. Shein审核打样\n3. 小批量测试\n4. 数据好放量生产',target:'潮流消费者',url:'https://us.shein.com/sheinx'},
+  {id:'hd1',platform:'homedepot',name:'Spring Black Friday',date:'2026-04-01',endDate:'2026-04-30',status:'past',summary:'春季家居焕新大促，园艺/户外/工具大降价',desc:'4月整月，园艺工具、割草机、户外家具为核心，折扣20-50%。',mechanisms:[{t:'品牌联促',c:'purple'},{t:'分期免息',c:'green'},{t:'Pro会员',c:'orange'}],steps:'1. 提前60天谈促销价\n2. 3月上架促销价签\n3. Pro Xtra会员额外5%',target:'DIY/园艺爱好者',url:'https://www.homedepot.com/'},
+  {id:'hd2',platform:'homedepot',name:'Black Friday',date:'2026-11-26',endDate:'2026-11-30',summary:'黑五家居大促，工具箱/电器/圣诞装饰',desc:'工具套装、智能家居、圣诞装饰品为核心，Doorbuster限时超低价。',mechanisms:[{t:'Doorbuster',c:'orange'},{t:'门庭抢购',c:'red'}],steps:'1. 10月确定Doorbuster\n2. DM广告册\n3. APP提前购',target:'全量消费者',url:'https://www.homedepot.com/'},
+  {id:'hd3',platform:'homedepot',name:"Father's Day Sale",date:'2026-06-05',endDate:'2026-06-21',status:'past',summary:'父亲节工具/烧烤/户外大促',desc:'工具套装、烧烤炉、户外设备，品牌联合折扣+制造商返利。',mechanisms:[{t:'品牌联促',c:'purple'},{t:'Gift Center',c:'cyan'}],steps:'1. 5月确定促销SKU\n2. 设置Gift Center\n3. 免费刻字服务',target:'父亲/DIY爱好者',url:'https://www.homedepot.com/'},
+  {id:'tem1',platform:'temu',name:'新人首单免费',date:'2026-01-01',endDate:'2026-12-31',summary:'新用户首单近乎免费，核心拉新机制',desc:'注册即送大额券包，首单$0.01购商品。是TEMU增长引擎。',mechanisms:[{t:'首单免费',c:'green'},{t:'新人券包',c:'pink'},{t:'满额包邮',c:'cyan'}],steps:'1. 注册送券包\n2. $0.01专区选品\n3. 凑单包邮\n4. 分享得券',target:'新用户',url:'https://www.temu.com/'},
+  {id:'tem2',platform:'temu',name:'闪电秒杀',date:'2026-06-01',endDate:'2026-12-31',summary:'每日多场限时限量秒杀，低至$0.99',desc:'每场1-2小时，库存条实时显示，首页最大流量位。',mechanisms:[{t:'限时限量',c:'orange'},{t:'库存预警',c:'red'}],steps:'1. 提报秒杀SKU\n2. 平台审核\n3. 排期上线\n4. 库存监控',target:'价格敏感用户',url:'https://www.temu.com/'},
+  {id:'tem3',platform:'temu',name:'Super Deals',date:'2026-05-01',endDate:'2026-12-31',summary:'全场低至90% OFF超级折扣专区',desc:'游戏化抽奖机制，用户参与可得额外折扣券。',mechanisms:[{t:'游戏化抽奖',c:'pink'},{t:'阶梯折扣',c:'green'}],steps:'1. 进入Super Deals\n2. 转盘抽折扣\n3. 引导凑单\n4. 下单后推送再抽奖',target:'全量用户',url:'https://www.temu.com/'},
+  {id:'ali1',platform:'aliexpress',name:'618 Summer Sale',date:'2026-06-12',endDate:'2026-06-25',summary:'速卖通年度夏季大促，Brand+和海外直播',desc:'覆盖全球200+国家，14国KOL同步直播带货。',mechanisms:[{t:'全场满减',c:'green'},{t:'品牌+',c:'purple'},{t:'海外直播',c:'pink'}],steps:'1. 5月报名\n2. 加入Brand+频道\n3. 报名直播排期\n4. 设置跨店满减',target:'全球消费者',url:'https://www.aliexpress.com/'},
+  {id:'ali2',platform:'aliexpress',name:'11.11 全球购物节',date:'2026-11-01',endDate:'2026-11-12',summary:'全球最大网购狂欢节，预售+正式期双波峰',desc:'11月1-10日预售，11-12日正式爆发，全年力度最大。',mechanisms:[{t:'预售定金膨胀',c:'pink'},{t:'跨店满减',c:'green'},{t:'品牌券',c:'purple'}],steps:'1. 8月招商\n2. 9月定货盘\n3. 10月20日预售\n4. 11月11日爆发',target:'全球消费者',url:'https://www.aliexpress.com/'},
+  {id:'way1',platform:'wayfair',name:'Way Day 2026',date:'2026-04-25',endDate:'2026-04-27',status:'past',summary:'Wayfair年度最大自有IP，全场最高80% OFF',desc:'3天48小时大促，全场免运费，APP用户提前24小时解锁。',mechanisms:[{t:'APP早鸟',c:'purple'},{t:'全场免邮',c:'green'}],steps:'1. 提前4周备货\n2. 提报Way Day价\n3. 广告预算翻倍',target:'家居消费者',url:'https://www.wayfair.com/'},
+  {id:'way2',platform:'wayfair',name:'Clearance / Open Box',date:'2026-01-01',endDate:'2026-12-31',summary:'清仓+开箱商品专区，最高70% OFF',desc:'全年持续，退货/展示品处理，库存有限。',mechanisms:[{t:'开箱特价',c:'orange'},{t:'限量供应',c:'red'}],steps:'1. 每日刷新库存\n2. 尽快结算\n3. 注意退换政策',target:'捡漏用户',url:'https://www.wayfair.com/'},
+  {id:'low1',platform:'lowes',name:'SpringFest 2026',date:'2026-04-03',endDate:'2026-05-05',status:'past',summary:'Lowe\'s春季园艺/家居焕新大促',desc:'主打园艺、油漆、户外工具，Mulch低至$2/袋引流。',mechanisms:[{t:'引流爆款',c:'orange'},{t:'品牌叠加',c:'purple'}],steps:'1. 确定引流爆款\n2. 品牌联促\n3. MyLowe\'s会员免费送货',target:'园艺爱好者',url:'https://www.lowes.com/'},
+  {id:'low2',platform:'lowes',name:"Father's Day Gift Sale",date:'2026-06-05',endDate:'2026-06-21',status:'past',summary:'父亲节礼品大促，工具/烧烤/户外',desc:'主打"Dad deserves the best tools"，与Home Depot正面竞争。',mechanisms:[{t:'买套装送配件',c:'pink'},{t:'Gift Guide',c:'purple'}],steps:'1. 5月下旬上架礼盒\n2. 设置Gift Guide\n3. 买套装送配件',target:'父亲/DIY爱好者',url:'https://www.lowes.com/'}
+];
+
+let actPlatform='all',actStatus='all',actMonth=null,actKeyword='';
+
+function actGetStatus(a){const now=new Date(),s=new Date(a.date),e=a.endDate?new Date(a.endDate):null;if(now<s)return'upcoming';if(e&&now>new Date(e.getTime()+864e5))return'past';if(!e&&(now-s)>7*864e5)return'past';return'ongoing'}
+function actFmtDate(d){const dt=new Date(d+'T00:00:00');return`${ACT_MONTHS[dt.getMonth()]}${dt.getDate()}日`}
+function actGetMonth(d){return new Date(d+'T00:00:00').getMonth()+1}
+
+function actRenderStats(){
+  let o=0,u=0;
+  ACT_DATA.forEach(a=>{const s=actGetStatus(a);if(s==='ongoing')o++;else if(s==='upcoming')u++});
+  document.getElementById('actStatsRow').innerHTML=`
+    <div class="act-stat-item"><div class="val">${ACT_DATA.length}</div><div class="lbl">收录活动</div></div>
+    <div class="act-stat-item"><div class="val">${o}</div><div class="lbl">🔥 进行中</div></div>
+    <div class="act-stat-item"><div class="val">${u}</div><div class="lbl">⏳ 即将开始</div></div>
+    <div class="act-stat-item"><div class="val">${Object.keys(ACT_PLATFORMS).length}</div><div class="lbl">覆盖平台</div></div>`;
+  const badge=document.getElementById('actBadge');if(o>0){badge.style.display='inline-block';badge.textContent=o}else{badge.style.display='none'}
+}
+
+function actRenderTimeline(){
+  const oM=[];ACT_DATA.forEach(a=>{const s=actGetStatus(a);if(s==='ongoing'){const m=actGetMonth(a.date);if(!oM.includes(m))oM.push(m)}});
+  let h='';ACT_MONTHS.forEach((m,i)=>{const mn=i+1;let cls='act-tm';if(actMonth===mn)cls+=' active';if(oM.includes(mn))cls+=' has-ongoing';h+=`<div class="${cls}" data-month="${mn}">${m}</div>`});
+  document.getElementById('actTimeline').innerHTML=h;
+  document.querySelectorAll('.act-tm').forEach(el=>{el.onclick=()=>{actMonth=actMonth===parseInt(el.dataset.month)?null:parseInt(el.dataset.month);actRenderTimeline();actRenderGrid()}})
+}
+
+function actRenderPlatformTabs(){
+  let h=`<div class="act-ptab ${actPlatform==='all'?'active':''}" data-platform="all">🌍</div>`;
+  Object.entries(ACT_PLATFORMS).forEach(([k,v])=>{h+=`<div class="act-ptab ${actPlatform===k?'active':''}" data-platform="${k}" title="${v.name}">${v.icon}</div>`});
+  document.getElementById('actPlatformTabs').innerHTML=h;
+  document.querySelectorAll('.act-ptab').forEach(t=>{t.onclick=()=>{actPlatform=t.dataset.platform;actRenderPlatformTabs();actRenderGrid()}})
+}
+
+function actRenderGrid(){
+  const kw=actKeyword.trim().toLowerCase();let list=ACT_DATA.map(a=>({...a,_s:actGetStatus(a)}));
+  if(actPlatform!=='all')list=list.filter(a=>a.platform===actPlatform);
+  if(actStatus!=='all')list=list.filter(a=>a._s===actStatus);
+  if(actMonth)list=list.filter(a=>actGetMonth(a.date)===actMonth);
+  if(kw)list=list.filter(a=>a.name.toLowerCase().includes(kw)||a.summary.toLowerCase().includes(kw)||(ACT_PLATFORMS[a.platform]&&ACT_PLATFORMS[a.platform].name.toLowerCase().includes(kw))||a.mechanisms.some(m=>m.t.toLowerCase().includes(kw)));
+  const g=document.getElementById('actGrid');
+  if(!list.length){g.innerHTML='<div class="empty-state">没有匹配的活动<br>共 <b>'+ACT_DATA.length+'</b> 条记录</div>';return}
+  g.innerHTML=list.map(a=>{const pf=ACT_PLATFORMS[a.platform],st=a._s,stL=st==='ongoing'?'进行中':st==='upcoming'?'即将开始':'已结束',dT=a.endDate?`${actFmtDate(a.date)} — ${actFmtDate(a.endDate)}`:actFmtDate(a.date);
+    return`<div class="act-card ${pf.cls}"><div class="act-card-head"><div class="act-card-avatar" style="background:${pf.color};color:#fff">${pf.icon}</div><div><div class="act-card-title">${a.name}</div><div class="act-card-sub">${pf.name}</div></div><div class="act-status-tag ${st}"><span class="act-status-dot"></span>${stL}</div></div><div class="act-card-date">📅 ${dT}</div><div class="act-card-desc">${a.summary}</div><div class="act-mechanisms">${a.mechanisms.map(m=>`<span class="act-mech-tag ${m.c||''}">${m.t}</span>`).join('')}</div><div class="act-card-steps"><strong>📋 玩法机制</strong><ol>${a.steps.split('\n').filter(s=>s.trim()).map(s=>`<li>${s.replace(/^\d+\.\s*/,'')}</li>`).join('')}</ol></div><div class="act-card-foot"><a href="${a.url}" target="_blank">前往活动页 →</a><span class="act-card-target">🎯 ${a.target}</span></div></div>`;
+  }).join('')
+}
+
+function initActivity(){
+  actRenderStats();actRenderTimeline();actRenderPlatformTabs();actRenderGrid();
+  document.getElementById('actSearch').oninput=function(){actKeyword=this.value;actRenderGrid()};
+  document.querySelectorAll('.act-chip').forEach(c=>{c.onclick=function(){document.querySelectorAll('.act-chip').forEach(x=>x.classList.remove('active'));this.classList.add('active');actStatus=this.dataset.status;if(actStatus!=='all'){actMonth=null;actRenderTimeline()}actRenderGrid()}})
+}
+initActivity();
+</script>
+</body>
+</html>
