@@ -603,7 +603,7 @@ const MON_SITES = [
   { name:'Wayfair', url:'https://www.wayfair.com/', color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true, capHint:'Wayfair 启用 Press & Hold 人机验证，当前免费云方案无法自动绕过' },
 ];
 
-const MON_STORAGE = 'banner-monitor-v1', MON_SHOT_W = 800, MON_SHOT_H = 600;
+const MON_STORAGE = 'banner-monitor-v2', MON_SHOT_W = 400, MON_SHOT_H = 300;
 const GITHUB_USER = 'caicai234', GITHUB_REPO = 'crossborder-banner-monitor', GITHUB_BRANCH = 'main';
 
 let monCloudMode = false;
@@ -619,25 +619,35 @@ function monBlobToImg(b){return new Promise((res,rej)=>{const u=URL.createObject
 function monHash(img){const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,16,16);const d=ctx.getImageData(0,0,16,16).data,g=[];for(let i=0;i<d.length;i+=4)g.push(.299*d[i]+.587*d[i+1]+.114*d[i+2]);const a=g.reduce((a,b)=>a+b,0)/g.length;let h='';for(let i=0;i<g.length;i++)h+=g[i]>a?'1':'0';return h}
 function monHamming(h1,h2){if(!h1||!h2||h1.length!==h2.length)return 999;let d=0;for(let i=0;i<h1.length;i++)if(h1[i]!==h2[i])d++;return d}
 function monMakeThumb(img){const c=document.createElement('canvas');c.width=320;c.height=240;c.getContext('2d').drawImage(img,0,0,320,240);return c.toDataURL('image/jpeg',.6)}
-function monThumUrl(u,h,cb){
+function monThumUrl(u,h,cb,w){
   let target=u;
   if(cb){
     const sep=u.includes('?')?'&':'?';
     target=`${u}${sep}nocache=${cb}`;
   }
-  return `https://image.thum.io/get/width/${MON_SHOT_W}/crop/${h||MON_SHOT_H}/${target}`
+  return `https://image.thum.io/get/width/${w||MON_SHOT_W}/crop/${h||MON_SHOT_H}/${target}`
 }
 function monLiveThumb(site,w,h){
-  const cb=Math.floor(Date.now()/(1000*60*15)); // 15分钟缓存刷新
-  const sep=site.url.includes('?')?'&':'?';
-  const target=`${site.url}${sep}nocache=${cb}`;
-  return `https://image.thum.io/get/width/${w||400}/crop/${h||300}/${encodeURIComponent(target)}`;
+  return monThumUrl(site.url,h,Math.floor(Date.now()/(1000*60*15)),w);
 }
 
 async function monFetchShot(url,cropH){
   const cb=Math.floor(Date.now()/(1000*60*15));
-  const tUrl=monThumUrl(url,cropH,cb);const proxies=[tUrl,`https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,`https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`];
-  for(let i=0;i<proxies.length;i++){try{const r=await monFetch(proxies[i],45000);if(!r.ok)continue;const b=await r.blob();if(!b.type.startsWith('image/')&&b.size<500)continue;const img=await monBlobToImg(b);if(img.naturalWidth<50)continue;return{img,blob:b,source:i}}catch(e){}}
+  const tUrl=monThumUrl(url,cropH,cb);
+  const proxies=[tUrl,`https://api.allorigins.win/raw?url=${encodeURIComponent(tUrl)}`,`https://corsproxy.io/?url=${encodeURIComponent(tUrl)}`];
+  for(let i=0;i<proxies.length;i++){
+    try{
+      const r=await monFetch(proxies[i],45000);
+      if(!r.ok)continue;
+      const b=await r.blob();
+      if(!b.type.startsWith('image/'))continue;
+      if(b.type==='image/gif')continue; // thum.io 返回 loading spinner
+      if(b.size<1000)continue; // 截图过大概率是占位图
+      const img=await monBlobToImg(b);
+      if(img.naturalWidth<50)continue;
+      return{img,blob:b,source:i}
+    }catch(e){}
+  }
   throw new Error('所有截图方式均失败');
 }
 
@@ -749,7 +759,7 @@ function monRenderCards(){
         return`<div class="banner-img-wrap${bnrs.length===1?' single':''}" style="${ratio}"><img src="${b.url}" alt="${label}" onerror="this.parentNode.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:60px;color:var(--muted);font-size:10px>加载失败</div>'"><div class="banner-label">${label}</div></div>`;
       }).join('');
       sc=`${bannerHtml}<div class="banner-count">头图 ×${s.banners.length}</div>`;
-    }else if(monCloudMode&&(status==='normal'||status==='baseline')&&!site.htmlMode){
+    }else if(monCloudMode&&!site.htmlMode){
       sc=`<img src="${monLiveThumb(site,400,300)}">`;
     }else if(site.htmlMode){
       sc=`<div class="placeholder"><div style="font-size:24px">🔗</div><div style="color:var(--ink);font-weight:600;font-size:12px">需手动检查</div><div style="font-size:10px;color:var(--muted);max-width:200px">${site.capHint||site.name+' 屏蔽自动化截图'}</div></div>`;
