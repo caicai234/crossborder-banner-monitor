@@ -23,7 +23,7 @@ const SITES = [
   { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true,
     proxyUrl: 'https://translate.google.com/translate?hl=en&sl=en&u=https://www.aliexpress.com/' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
-  { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/' },
+  { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
 ];
 
 // ============ 工具 ============
@@ -148,10 +148,10 @@ async function checkSite(site, data) {
               const html = await res.text();
               hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
             } else {
-              hash = `${site.id}-manual-${Date.now()}`;
+              hash = `${site.id}-manual-placeholder`;
             }
           } catch {
-            hash = `${site.id}-manual-${Date.now()}`;
+            hash = `${site.id}-manual-placeholder`;
           }
         }
       } else {
@@ -164,10 +164,10 @@ async function checkSite(site, data) {
             const html = await res.text();
             hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
           } else {
-            hash = `${site.id}-manual-${Date.now()}`;
+            hash = `${site.id}-manual-placeholder`;
           }
         } catch {
-          hash = `${site.id}-manual-${Date.now()}`;
+          hash = `${site.id}-manual-placeholder`;
         }
       }
     } else {
@@ -181,7 +181,7 @@ async function checkSite(site, data) {
     let changed = false;
 
     if (site.htmlMode && hash && hash.includes('manual')) {
-      status = 'normal';
+      status = 'manual';
     } else if (prev.hash && !prev.hash.includes('manual')) {
       const dist = hammingDistance(prev.hash, hash);
       if (dist > CHANGE_THRESHOLD) {

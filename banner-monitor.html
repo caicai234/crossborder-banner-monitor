@@ -77,6 +77,7 @@
   .card.changed{border-color:rgba(239,68,68,.5);animation:flashRed 1s ease-in-out 3}
   .card.checking{border-color:rgba(79,110,247,.4)}
   .card.error{border-color:rgba(239,68,68,.3);opacity:.7}
+  .card.manual{border-color:rgba(245,158,11,.3)}
   @keyframes flashRed{
     0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}
     50%{box-shadow:0 0 24px rgba(239,68,68,.4)}
@@ -101,12 +102,14 @@
   .status-badge.checking{background:rgba(79,110,247,.15);color:#60a5fa}
   .status-badge.error{background:rgba(239,68,68,.1);color:#ef4444}
   .status-badge.baseline{background:rgba(100,116,139,.15);color:#94a3b8}
+  .status-badge.manual{background:rgba(245,158,11,.12);color:#f59e0b}
   .status-badge .sd{width:6px;height:6px;border-radius:50%}
   .status-badge.normal .sd{background:#22c55e}
   .status-badge.changed .sd{background:#ef4444;animation:pulse 1s infinite}
   .status-badge.checking .sd{background:#3b82f6;animation:pulse 1s infinite}
   .status-badge.error .sd{background:#ef4444}
   .status-badge.baseline .sd{background:#64748b}
+  .status-badge.manual .sd{background:#f59e0b}
 
   .shot-wrap{
     position:relative;margin:0 16px;border-radius:12px;overflow:hidden;
@@ -350,7 +353,7 @@ const SITES = [
   { name:'Temu',        url:'https://www.temu.com/',           color:'#FB7701', dark:false, loc:'temu.com' },
   { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com', htmlMode:true },
   { name:"Lowe's",      url:'https://www.lowes.com/',          color:'#004990', dark:false, loc:'lowes.com' },
-  { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com' },
+  { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true, capHint:'Wayfair 启用 Press & Hold 人机验证，当前免费云方案无法自动绕过' },
 ];
 
 const STORAGE_KEY = 'banner-monitor-v1';
@@ -592,8 +595,8 @@ async function checkSite(site){
         hash = computeTextHash(imgStr);
         thumb = makeHTMLThumb(bannerImages, site.name);
       } else {
-        // HTML抓取失败，标记为需手动检查
-        hash = site.name.toLowerCase() + '-manual-' + Date.now();
+        // HTML抓取失败，标记为需手动检查（固定占位符，避免误报变化）
+        hash = site.name.toLowerCase() + '-manual-placeholder';
         thumb = null;
         bannerImages = [];
       }
@@ -609,9 +612,9 @@ async function checkSite(site){
     let status = 'normal';
     let changed = false;
 
-    if(site.htmlMode && !thumb){
+    if(site.htmlMode && hash && hash.includes('manual')){
       // HTML模式截图失败，标记为需手动检查
-      status = 'normal';
+      status = 'manual';
       changed = false;
     }else if(prev){
       const dist = hammingDistance(prev, hash);
@@ -806,7 +809,7 @@ function renderCards(){
     const status = s.status || 'pending';
     const statusText = {
       normal:'正常', changed:'已变化', checking:'检测中',
-      error:'错误', baseline:'已建基线', pending:'未检测'
+      error:'错误', baseline:'已建基线', pending:'未检测', manual:'需手动'
     }[status];
     const txtColor = site.dark ? '#1a1f36' : '#fff';
 
@@ -819,11 +822,11 @@ function renderCards(){
       if(s.status === 'changed'){
         shotContent += '<div class="changed-tag">CHANGED</div>';
       }
-    }else if(site.htmlMode && (status === 'normal' || status === 'baseline' || status === 'pending')){
+    }else if(site.htmlMode && (status === 'normal' || status === 'baseline' || status === 'pending' || status === 'manual')){
       shotContent = `<div class="placeholder">
         <div style="font-size:28px;margin-bottom:4px">🔗</div>
         <div style="color:#e2e8f0;font-weight:600;font-size:13px">需手动检查</div>
-        <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;max-width:220px">${site.name} 屏蔽自动化截图，<br>请通过下方按钮手动查看对比</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;max-width:220px">${site.capHint || (site.name + ' 屏蔽自动化截图，<br>请通过下方按钮手动查看对比')}</div>
       </div>`;
     }else if(status === 'checking'){
       shotContent = `
@@ -833,7 +836,7 @@ function renderCards(){
     }else if(s.thumb){
       shotContent = `<img src="${s.thumb}">${status==='changed'?'<div class="changed-tag">CHANGED</div>':''}`;
     }else if(site.htmlMode){
-      shotContent = `<div class="placeholder"><div>🔍</div><div>HTML监控模式</div><div style="font-size:11px;color:#374151">点击「立即检测」开始</div></div>`;
+      shotContent = `<div class="placeholder"><div>🔍</div><div>HTML监控模式</div><div style="font-size:11px;color:#64748b;margin-top:4px;max-width:220px">${site.capHint || '点击「立即检测」开始'}</div></div>`;
     }else{
       shotContent = `<div class="placeholder"><div>📐</div><div>点击「立即检测」获取截图</div></div>`;
     }
