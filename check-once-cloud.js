@@ -20,8 +20,7 @@ const SITES = [
   { id: 'shein',      name: 'Shein',       url: 'https://us.shein.com/' },
   { id: 'homedepot',  name: 'Home Depot',  url: 'https://www.homedepot.com/' },
   { id: 'temu',       name: 'Temu',        url: 'https://www.temu.com/' },
-  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/',
-    thumOpts: 'userAgent/Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F125.0.0.0%20Safari%2F537.36/wait/3000' },
+  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
   { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
 ];
@@ -129,7 +128,7 @@ async function checkSite(site, data) {
   try {
     let hash;
 
-    // Wayfair 特殊处理
+    // 反爬平台（Wayfair / AliExpress）：通过 HTML 代理获取页面内容哈希
     if (site.htmlMode) {
       try {
         const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(site.url)}`, {
@@ -139,10 +138,10 @@ async function checkSite(site, data) {
           const html = await res.text();
           hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
         } else {
-          hash = `wayfair-manual-${Date.now()}`;
+          hash = `${site.id}-manual-${Date.now()}`;
         }
       } catch {
-        hash = `wayfair-manual-${Date.now()}`;
+        hash = `${site.id}-manual-${Date.now()}`;
       }
     } else {
       // 正常平台：下载截图 + 计算哈希
@@ -154,9 +153,9 @@ async function checkSite(site, data) {
     let status = 'normal';
     let changed = false;
 
-    if (site.htmlMode && hash && hash.startsWith('wayfair-manual')) {
+    if (site.htmlMode && hash && hash.includes('manual')) {
       status = 'normal';
-    } else if (prev.hash) {
+    } else if (prev.hash && !prev.hash.includes('manual')) {
       const dist = hammingDistance(prev.hash, hash);
       if (dist > CHANGE_THRESHOLD) {
         status = 'changed';
