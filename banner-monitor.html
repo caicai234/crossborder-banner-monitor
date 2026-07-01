@@ -350,7 +350,7 @@ const SITES = [
   { name:'Temu',        url:'https://www.temu.com/',           color:'#FB7701', dark:false, loc:'temu.com' },
   { name:'AliExpress',  url:'https://www.aliexpress.com/',     color:'#E62E04', dark:false, loc:'aliexpress.com', htmlMode:true },
   { name:"Lowe's",      url:'https://www.lowes.com/',          color:'#004990', dark:false, loc:'lowes.com' },
-  { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com', htmlMode:true },
+  { name:'Wayfair',     url:'https://www.wayfair.com/',        color:'#7B189F', dark:false, loc:'wayfair.com' },
 ];
 
 const STORAGE_KEY = 'banner-monitor-v1';
@@ -592,8 +592,8 @@ async function checkSite(site){
         hash = computeTextHash(imgStr);
         thumb = makeHTMLThumb(bannerImages, site.name);
       } else {
-        // Wayfair 无法自动截图（反爬保护），标记为需手动检查
-        hash = 'wayfair-manual-' + Date.now();
+        // HTML抓取失败，标记为需手动检查
+        hash = site.name.toLowerCase() + '-manual-' + Date.now();
         thumb = null;
         bannerImages = [];
       }
@@ -610,7 +610,7 @@ async function checkSite(site){
     let changed = false;
 
     if(site.htmlMode && !thumb){
-      // Wayfair无法自动监控，标记为需手动检查
+      // HTML模式截图失败，标记为需手动检查
       status = 'normal';
       changed = false;
     }else if(prev){

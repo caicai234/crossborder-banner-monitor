@@ -23,7 +23,7 @@ const SITES = [
   { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true,
     proxyUrl: 'https://translate.google.com/translate?hl=en&sl=en&u=https://www.aliexpress.com/' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
-  { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
+  { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/' },
 ];
 
 // ============ 工具 ============
