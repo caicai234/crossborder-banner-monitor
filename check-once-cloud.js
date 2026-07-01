@@ -20,7 +20,8 @@ const SITES = [
   { id: 'shein',      name: 'Shein',       url: 'https://us.shein.com/' },
   { id: 'homedepot',  name: 'Home Depot',  url: 'https://www.homedepot.com/' },
   { id: 'temu',       name: 'Temu',        url: 'https://www.temu.com/' },
-  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true },
+  { id: 'aliexpress', name: 'AliExpress',  url: 'https://www.aliexpress.com/', htmlMode: true,
+    proxyUrl: 'https://translate.google.com/translate?hl=en&sl=en&u=https://www.aliexpress.com/' },
   { id: 'lowes',      name: "Lowe's",      url: 'https://www.lowes.com/' },
   { id: 'wayfair',    name: 'Wayfair',     url: 'https://www.wayfair.com/', htmlMode: true },
 ];
@@ -128,20 +129,46 @@ async function checkSite(site, data) {
   try {
     let hash;
 
-    // 反爬平台（Wayfair / AliExpress）：通过 HTML 代理获取页面内容哈希
+    // 反爬平台处理
     if (site.htmlMode) {
-      try {
-        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(site.url)}`, {
-          signal: AbortSignal.timeout(40000)
-        });
-        if (res.ok) {
-          const html = await res.text();
-          hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
-        } else {
+      // 策略1: 如果配了 proxyUrl，通过代理 URL + thum.io 截图
+      if (site.proxyUrl) {
+        try {
+          const buffer = await downloadScreenshot(site.proxyUrl, site.id);
+          hash = computeImageHash(buffer);
+          log(`  ✅ ${site.name} 代理截图成功 (${hash.length}bit哈希)`);
+        } catch (e) {
+          log(`  ⚠️ ${site.name} 代理截图失败: ${e.message}, 尝试HTML模式...`);
+          // 策略2: 降级为 HTML 代理
+          try {
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(site.url)}`, {
+              signal: AbortSignal.timeout(40000)
+            });
+            if (res.ok) {
+              const html = await res.text();
+              hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
+            } else {
+              hash = `${site.id}-manual-${Date.now()}`;
+            }
+          } catch {
+            hash = `${site.id}-manual-${Date.now()}`;
+          }
+        }
+      } else {
+        // 无 proxyUrl，直接 HTML 代理
+        try {
+          const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(site.url)}`, {
+            signal: AbortSignal.timeout(40000)
+          });
+          if (res.ok) {
+            const html = await res.text();
+            hash = crypto.createHash('sha256').update(html.slice(0, 50000)).digest('hex').slice(0, 64);
+          } else {
+            hash = `${site.id}-manual-${Date.now()}`;
+          }
+        } catch {
           hash = `${site.id}-manual-${Date.now()}`;
         }
-      } catch {
-        hash = `${site.id}-manual-${Date.now()}`;
       }
     } else {
       // 正常平台：下载截图 + 计算哈希
