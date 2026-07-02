@@ -147,10 +147,10 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .monitor-shot .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;flex-direction:column;gap:6px}
 .monitor-shot .loading-overlay{position:absolute;inset:0;background:rgba(5,8,16,.7);display:flex;align-items:center;justify-content:center}
 /* 横幅模式 — 图片级头图横排展示 */
-.monitor-shot.banner-mode{background:var(--card2);display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px}
-.monitor-shot.banner-mode .banner-img-wrap{min-height:0;border-radius:6px;overflow:hidden;position:relative;background:#050810}
-.monitor-shot.banner-mode .banner-img-wrap img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
-.monitor-shot.banner-mode .banner-img-wrap.single{flex:1}
+.monitor-shot.banner-mode{background:var(--card2);display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px;aspect-ratio:auto;height:auto}
+.monitor-shot.banner-mode .banner-img-wrap{border-radius:6px;overflow:hidden;position:relative;background:#050810;flex:none}
+.monitor-shot.banner-mode .banner-img-wrap img{width:100%;height:auto;object-fit:contain;object-position:center;display:block}
+.monitor-shot.banner-mode .banner-img-wrap.single{flex:none}
 .monitor-shot.banner-mode .banner-label{position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .monitor-shot.banner-mode .banner-count{position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(34,197,94,.15);color:var(--green);backdrop-filter:blur(4px)}
 .monitor-spinner{width:28px;height:28px;border:3px solid rgba(79,110,247,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
